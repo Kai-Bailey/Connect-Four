@@ -1,0 +1,4 @@
+.gitignore text eol=lf
+
+*.rs       text eol=lf
+Cargo.*    text eol=lf
