@@ -1,5 +1,5 @@
 [package]
-name = "Connect-Four"
+name = "connect-four"
 version = "0.1.0"
 authors = ["Dinula De Silva", "Kai Bailey", "Hai Yang Xu"]
 edition = "2018"
