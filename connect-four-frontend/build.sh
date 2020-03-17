@@ -11,11 +11,11 @@ cargo web build --target=wasm32-unknown-unknown
 
 echo ''
 echo 'Removing Old WebAssembly Files...'
-if [ -f ${ROOT}connect-four-frontend.js ]; then
-    rm ${ROOT}connect-four-frontend.js;
+if [ -f ${DEST}connect-four-frontend.js ]; then
+    rm ${DEST}connect-four-frontend.js;
 fi
-if [ -f ${ROOT}connect-four-frontend.wasm ]; then
-    rm ${ROOT}connect-four-frontend.wasm
+if [ -f ${DEST}connect-four-frontend.wasm ]; then
+    rm ${DEST}connect-four-frontend.wasm
 fi
 
 echo ''
