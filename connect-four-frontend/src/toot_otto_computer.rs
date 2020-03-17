@@ -1,5 +1,5 @@
 pub fn main() {
-    // TootOttoComputer
+    // TootOttoComputer.js
     js! {
         angular.module("Connect4App").controller("tootComputerController", tootComputerController);
 

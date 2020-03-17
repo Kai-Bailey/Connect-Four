@@ -20,8 +20,8 @@ fi
 
 echo ''
 echo 'Copying WebAssembly Files...'
-cp ${ROOT}connect-four-frontend.js ${DEST}
+sed 's/S_/\$/g' ${ROOT}connect-four-frontend.js > ${DEST}connect-four-frontend.js
 cp ${ROOT}connect-four-frontend.wasm ${DEST}
 
 echo ''
-echo 'Finished Successfully'
+echo 'Finished Successfully!'
