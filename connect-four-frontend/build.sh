@@ -4,7 +4,7 @@ set -e
 set -u
 
 ROOT=./target/wasm32-unknown-unknown/debug/
-DEST=../connect-four/public/webassembly/
+DEST=../connect-four/public/
 
 echo 'Building WebAssembly Files...'
 cargo web build --target=wasm32-unknown-unknown

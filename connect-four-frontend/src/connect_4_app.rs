@@ -3,8 +3,8 @@ pub fn main() {
     js! {
         var app = angular.module("Connect4App", ["ngRoute", "ngResource", "angular.filter"]);
 
-        app.config(function($routeProvider) {
-            $routeProvider
+        app.config(function(S_routeProvider) {
+            S_routeProvider
                 // the home display
                 .when("/", {
                     templateUrl: "main.html",
@@ -61,13 +61,13 @@ pub fn main() {
 
         });
 
-        app.factory("postService", function($resource){
-            return $resource("/games");
+        app.factory("postService", function(S_resource){
+            return S_resource("/games");
         });
 
-        app.controller("mainController", function(postService, $scope, $rootScope){
-            $scope.games=[];
-            $scope.newGame= {gameNumber:"100", gameType:"Connect-4", Player1Name: "", Player2Name: "Computer", WinnerName: "", GameDate: Date.now()};
+        app.controller("mainController", function(postService, S_scope, S_rootScope){
+            S_scope.games=[];
+            S_scope.newGame= {gameNumber:"100", gameType:"Connect-4", Player1Name: "", Player2Name: "Computer", WinnerName: "", GameDate: Date.now()};
             Array.prototype.clone = function () {
                 var arr = [], i;
                 for (i = 0; i < this.length; i++) {
@@ -75,7 +75,7 @@ pub fn main() {
                 }
                 return arr;
             };
-            $scope.Game=function(){
+            S_scope.Game=function(){
                 var target = document.getElementById("gameboard");
                 var button = document.getElementById("startbutton");
                 button.disabled = true;
@@ -162,14 +162,14 @@ pub fn main() {
                 this.rejectClick = false;
                 var msg = null;
                 if (player > 0) {
-                    msg = $scope.newGame.Player1Name + " wins";
-                    $scope.newGame.WinnerName = $scope.newGame.Player1Name;
+                    msg = S_scope.newGame.Player1Name + " wins";
+                    S_scope.newGame.WinnerName = S_scope.newGame.Player1Name;
                 } else if (player < 0) {
-                    msg = $scope.newGame.Player2Name + " wins";
-                    $scope.newGame.WinnerName = $scope.newGame.Player2Name;
+                    msg = S_scope.newGame.Player2Name + " wins";
+                    S_scope.newGame.WinnerName = S_scope.newGame.Player2Name;
                 } else {
                     msg = "It's a draw";
-                    $scope.newGame.WinnerName = "Draw";
+                    S_scope.newGame.WinnerName = "Draw";
                 }
                 msg += " - Click on game board to reset";
                 this.context.save();
@@ -178,7 +178,7 @@ pub fn main() {
                 this.context.fillText(msg, 130, 20);
                 this.context.restore();
 
-                postService.save($scope.newGame, function(){
+                postService.save(S_scope.newGame, function(){
 
                     console.log("succesfully saved");
                 });
@@ -583,7 +583,7 @@ pub fn main() {
 
             };
             this.init();
-                $scope.games.push($scope.newGame);
+                S_scope.games.push(S_scope.newGame);
             };
         });
     }

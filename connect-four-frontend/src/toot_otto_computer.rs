@@ -3,13 +3,13 @@ pub fn main() {
     js! {
         angular.module("Connect4App").controller("tootComputerController", tootComputerController);
 
-        app.factory("postService", function($resource) {
-            return $resource("/games");
+        app.factory("postService", function(S_resource) {
+            return S_resource("/games");
         });
 
-        function tootComputerController(postService, $scope, $rootScope) {
-            $scope.games=[];
-            $scope.newGame= {gameNumber:"100", gameType:"TOOT-OTTO", Player1Name: "", Player2Name: "Computer", WinnerName: "Unfinished Game", GameDate: Date.now(), Label:""};
+        function tootComputerController(postService, S_scope, S_rootScope) {
+            S_scope.games=[];
+            S_scope.newGame= {gameNumber:"100", gameType:"TOOT-OTTO", Player1Name: "", Player2Name: "Computer", WinnerName: "Unfinished Game", GameDate: Date.now(), Label:""};
             Array.prototype.clone = function () {
                 var arr = [], i;
                 for (i = 0; i < this.length; i++) {
@@ -17,7 +17,7 @@ pub fn main() {
                 }
                 return arr;
             };
-            $scope.Game=function(){
+            S_scope.Game=function(){
 
             var target = document.getElementById("gameboard");
             var button = document.getElementById("startbutton");
@@ -35,9 +35,8 @@ pub fn main() {
             this.aiHistory = [];
 
             this.initOnceDone = false;
-            /**
-             * Only initalize once for these functions, can prevent race condition
-             */
+
+            // Only initalize once for these functions, can prevent race condition
             this.initOnce = function () {
                 if (this.initOnceDone) {
                     return false;
@@ -45,7 +44,7 @@ pub fn main() {
 
                 this.canvas = document.getElementsByTagName("canvas")[0];
                 this.canvas.addEventListener("click", function (e) {
-                if($scope.newGame.Label === ""){
+                if(S_scope.newGame.Label === ""){
                     return false;
                 }
                     that.onclick(that.canvas, e);
@@ -117,14 +116,14 @@ pub fn main() {
                 this.rejectClick = false;
                 var msg = null;
                 if (player > 0) {
-                    msg = $scope.newGame.Player1Name + " wins";
-                    $scope.newGame.WinnerName = $scope.newGame.Player1Name;
+                    msg = S_scope.newGame.Player1Name + " wins";
+                    S_scope.newGame.WinnerName = S_scope.newGame.Player1Name;
                 } else if (player < 0) {
-                    msg = $scope.newGame.Player2Name + " wins";
-                    $scope.newGame.WinnerName = $scope.newGame.Player2Name;
+                    msg = S_scope.newGame.Player2Name + " wins";
+                    S_scope.newGame.WinnerName = S_scope.newGame.Player2Name;
                 } else {
                     msg = "It's a draw";
-                    $scope.newGame.WinnerName = "Draw";
+                    S_scope.newGame.WinnerName = "Draw";
                 }
                 msg += " - Click on game board to reset";
                 this.context.save();
@@ -133,7 +132,7 @@ pub fn main() {
                 this.context.fillText(msg, 150, 20);
                 this.context.restore();
 
-                postService.save($scope.newGame, function(){
+                postService.save(S_scope.newGame, function(){
 
                     console.log("succesfully saved");
                 });
@@ -193,7 +192,7 @@ pub fn main() {
                 }
                 this.animate(column, this.playerMove(this.move), row, 0, function () {
                     that.map[row][column] = that.playerMove(that.move);
-                    that.dummyMap[row][column] = $scope.newGame.Label;
+                    that.dummyMap[row][column] = S_scope.newGame.Label;
                     that.move++;
                     that.draw();
                     that.check();
@@ -335,10 +334,10 @@ pub fn main() {
                 var fg_color = "transparent";
                 if (move >= 1) {
                     fg_color = "#99ffcc";
-                    text = $scope.newGame.Label;
+                    text = S_scope.newGame.Label;
                 } else if (move <= -1) {
                     fg_color = "#ffff99";
-                    text = $scope.newGame.Label;
+                    text = S_scope.newGame.Label;
                 }
                 if (to_row * 75 >= cur_pos) {
                     this.clear();
@@ -402,7 +401,7 @@ pub fn main() {
 
                 var choice = Math.floor(Math.random() * 2);
 
-                $scope.newGame.Label=dummyLabel[choice];
+                S_scope.newGame.Label=dummyLabel[choice];
 
                 var choice = null;
 
@@ -586,7 +585,7 @@ pub fn main() {
 
             };
             this.init();
-                $scope.games.push($scope.newGame);
+                S_scope.games.push(S_scope.newGame);
             };
         }
     }
