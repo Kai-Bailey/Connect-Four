@@ -8,15 +8,14 @@ mod score_board_ctrl;
 mod toot_otto_computer;
 mod toot_otto_human;
 
-mod all;
-
 fn main() {
-    /*
     connect_4_app::main();
     connect_4_human::main();
     score_board_ctrl::main();
     toot_otto_computer::main();
     toot_otto_human::main();
-    */
-    all::main();
+
+    js! {
+        window.wasmReady();
+    }
 }
