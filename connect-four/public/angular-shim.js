@@ -2,14 +2,14 @@
 
     const _addEventListener = EventTarget.prototype.addEventListener;
 
-    let wasmReady = false;
+    let myWasmReady = false;
 
     const myDelayedEvents = [];
 
     EventTarget.prototype.addEventListener = function (type, fn, ...others) {
         if (type === "DOMContentLoaded" || type === "load") {
             return _addEventListener.call(this, type, (...args) => {
-                if (wasmReady) {
+                if (myWasmReady) {
                     fn(...args);
                 } else {
                     myDelayedEvents.push({
@@ -24,7 +24,7 @@
     };
 
     window.wasmReady = () => {
-        wasmReady = true;
+        myWasmReady = true;
 
         for (entry of myDelayedEvents) {
             try {
