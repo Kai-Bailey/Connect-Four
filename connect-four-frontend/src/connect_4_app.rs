@@ -1,7 +1,7 @@
 pub fn main() {
     // Connect4App.js
     js! {
-        var app = angular.module("Connect4App", ["ngRoute", "ngResource", "angular.filter"]);
+        window.app = angular.module("Connect4App", ["ngRoute", "ngResource", "angular.filter"]);
 
         app.config(function(S_routeProvider) {
             S_routeProvider
