@@ -13,7 +13,6 @@
                     fn(...args);
                 } else {
                     myDelayedEvents.push({
-                        event: type,
                         fn: fn,
                         args: args,
                     });
