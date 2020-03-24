@@ -1,5 +1,5 @@
 use r2d2::PooledConnection;
-use r2d2_mongodb::{ConnectionOptions, MongodbConnectionManager};
+use r2d2_mongodb::{ConnectionOptions, MongodbConnectionManager, VerifyPeer};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Outcome, Request, State};
@@ -14,14 +14,13 @@ pub struct Conn(pub PooledConnection<MongodbConnectionManager>);
     create a connection pool of mongodb connections to allow a lot of users to modify db at same time.
 */
 pub fn init_connection() -> Pool {
-    let mongo_addr = "http://localhost";
-    let mongo_port = 8000 as u16;
-    let db_name = "test";
+    let mongo_addr = "localhost";
+    let mongo_port = 27017 as u16;
+    let db_name = "Connect4DB";
     let manager = MongodbConnectionManager::new(
         ConnectionOptions::builder()
             .with_host(&mongo_addr, mongo_port)
             .with_db(&db_name)
-            //.with_auth("root", "password")
             .build(),
     );
     match Pool::builder().max_size(64).build(manager) {

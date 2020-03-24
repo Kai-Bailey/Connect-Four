@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 rocket = "0.4"
 rocket_codegen = "0.4"
-mongodb = "0.3.11"
-bson = "0.14.0"
+mongodb = { version = "0.3.11", features = ["ssl"] }
+#bson = "0.14.0"
 r2d2 = "0.8.3"
 r2d2-mongodb = "*"
 serde = { version = "1", features = ["derive"] }
