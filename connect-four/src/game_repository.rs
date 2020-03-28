@@ -1,5 +1,5 @@
 use crate::mongo_connection::Conn;
-use crate::game::Game;
+use crate::game::{Game, InsertableGame};
 use mongodb::{bson, oid::ObjectId, coll::results::DeleteResult, doc, error::Error};
 use crate::r2d2_mongodb::mongodb::db::ThreadedDatabase;
 
@@ -47,29 +47,31 @@ pub fn update_game_with_id_handler(id: bson::oid::ObjectId, game: Game, connecti
     };
 }
 
-pub fn add_game(game: Game, connection: &Conn) {
-
-}
-
-/*
-pub fn insert(cats: Cat, connection: &Conn) -> Result<ObjectId, Error> {
-    let insertable = InsertableCat::from_cat(cats.clone());
-    match bson::to_bson(&insertable) {
+pub fn insert_game_handler(game: Game, connection: &Conn) -> Result<ObjectId, Error> {
+    let new_game = InsertableGame{
+        gameType: game.gameType,
+        gameNumber: game.gameNumber,
+        Player1Name: game.Player1Name,
+        Player2Name: game.Player2Name,
+        WinnerName: game.WinnerName,
+        GameDate: game.GameDate
+    };
+    match bson::to_bson(&new_game) {
         Ok(model_bson) => match model_bson {
             bson::Bson::Document(model_doc) => {
                 match connection
-                    .collection(COLLECTION)
+                    .collection("games")
                     .insert_one(model_doc, None)
-                {
-                    Ok(res) => match res.inserted_id {
-                        Some(res) => match bson::from_bson(res) {
-                            Ok(res) => Ok(res),
-                            Err(_) => Err(Error::DefaultError(String::from("Failed to read BSON")))
+                    {
+                        Ok(res) => match res.inserted_id {
+                            Some(res) => match bson::from_bson(res) {
+                                Ok(res) => Ok(res),
+                                Err(_) => Err(Error::DefaultError(String::from("Failed to read BSON")))
+                            },
+                            None => Err(Error::DefaultError(String::from("None")))
                         },
-                        None => Err(Error::DefaultError(String::from("None")))
-                    },
-                    Err(err) => Err(err),
-                }
+                        Err(err) => Err(err),
+                    }
             }
             _ => Err(Error::DefaultError(String::from(
                 "Failed to create Document",
@@ -78,4 +80,7 @@ pub fn insert(cats: Cat, connection: &Conn) -> Result<ObjectId, Error> {
         Err(_) => Err(Error::DefaultError(String::from("Failed to create BSON"))),
     }
 }
-*/
+
+pub fn delete_game_handler(id: ObjectId, conn: &Conn) -> Result<DeleteResult, Error> {
+    conn.collection("games").delete_one(doc! {"_id": id}, None)
+}
