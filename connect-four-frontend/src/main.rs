@@ -14,4 +14,8 @@ fn main() {
     score_board_ctrl::main();
     toot_otto_computer::main();
     toot_otto_human::main();
+
+    js! {
+        window.wasmReady();
+    }
 }
