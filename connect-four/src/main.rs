@@ -4,15 +4,10 @@
 */
 
 #![feature(decl_macro, proc_macro_hygiene)]
-#![allow(proc_macro_derive_resolution_fallback)]
-#[macro_use]
-
 extern crate r2d2_mongodb;
 mod mongo_connection;
 mod game;
 mod game_repository;
-
-
 #[macro_use] extern crate rocket;
 
 use mongodb::{bson, coll::results::DeleteResult, doc, error::Error, oid::ObjectId};
