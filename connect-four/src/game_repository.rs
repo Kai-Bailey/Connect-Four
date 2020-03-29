@@ -10,7 +10,7 @@ pub fn get_all_games_handler(connection: &Conn) -> Result<Vec<Game>, Error> {
         .map(|result| match result {
             Ok(doc) => match bson::from_bson(bson::Bson::Document(doc)) {
                 Ok(result_model) => Ok(result_model),
-                Err(err) => Err(Error::DefaultError(String::from(""))),
+                Err(_) => Err(Error::DefaultError(String::from(""))),
             },
             Err(err) => Err(err),
         })
@@ -31,20 +31,23 @@ pub fn get_game_with_id_handler(id: ObjectId, conn: &Conn) -> Result<Option<Game
         }
 }
 
-pub fn update_game_with_id_handler(id: bson::oid::ObjectId, game: Game, connection: &Conn) {
+pub fn update_game_with_id_handler(id: bson::oid::ObjectId, game: Game, connection: &Conn) -> Result<Game, Error> {
     let mut game = game.clone();
     game.id = Some(id.clone());
     match bson::to_bson(&game) {
         Ok(model_bson) => match model_bson {
             bson::Bson::Document(doc) => {
-                connection
+                match connection
                     .collection("games")
-                    .replace_one(doc! {"_id": id}, doc, None);
+                    .replace_one(doc! {"_id": id}, doc, None) {
+                    Ok(_) => Ok(game),
+                    Err(err) => Err(err),
+                }
             }
-            _ => {},
+            _ => Err(Error::DefaultError(String::from("Error: Document not created"))),
         },
-        Err(_) => {},
-    };
+        Err(_) => Err(Error::DefaultError(String::from("Failed to generate BSON"))),
+    }
 }
 
 pub fn insert_game_handler(game: Game, connection: &Conn) -> Result<ObjectId, Error> {

@@ -6,7 +6,6 @@
 
 use r2d2::PooledConnection;
 use r2d2_mongodb::{ConnectionOptions, MongodbConnectionManager};
-use std::env;
 use std::ops::Deref;
 use rocket::{Request, State, Outcome};
 use rocket::request::{self, FromRequest};

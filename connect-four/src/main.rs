@@ -10,11 +10,10 @@ mod game;
 mod game_repository;
 #[macro_use] extern crate rocket;
 
-use mongodb::{bson, coll::results::DeleteResult, doc, error::Error, oid::ObjectId};
+use mongodb::{doc, error::Error, oid::ObjectId};
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use rocket_contrib::serve::StaticFiles;
-use crate::r2d2_mongodb::mongodb::db::ThreadedDatabase;
 use crate::game::Game;
 use crate::mongo_connection::Conn;
 
@@ -35,19 +34,22 @@ pub fn get_all_games(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
 }
 
 #[post("/", format = "application/json", data = "<game>")]
-fn insert_game(game: Json<Game>, connection: Conn) {
+fn insert_game(game: Json<Game>, connection: Conn) -> Result<Json<ObjectId>, Status> {
     match game_repository::insert_game_handler(game.into_inner(), &connection) {
         Ok(res) => Ok(Json(res)),
         Err(err) => Err(error_status(err))
-    };
+    }
 }
 
 #[put("/<id>", format = "application/json", data = "<game>")]
-fn update_game_with_id(id: String, game: Json<Game>, connection: Conn) {
+fn update_game_with_id(id: String, game: Json<Game>, connection: Conn) -> Result<Json<Game>, Status>{
     match ObjectId::with_string(&String::from(&id)) {
-        Ok(res) => { game_repository::update_game_with_id_handler(res, game.into_inner(), &connection) },
-        Err(_) => {}
-    };
+        Ok(res) => match game_repository::update_game_with_id_handler(res, game.into_inner(), &connection) {
+            Ok(res) => Ok(Json(res)),
+            Err(err) => Err(error_status(err))
+        },
+        Err(_) => Err(error_status(Error::DefaultError(String::from("Failed to parse ObjectId"))))
+    }
 }
 
 
@@ -76,8 +78,8 @@ fn games_id_delete(id: String, connection: Conn) -> Result<Json<String>, Status>
 
 // users.js
 #[get("/")]
-fn users(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
-    Err(Status::NotFound)
+fn users(connection: Conn) -> String {
+    String::from("respond with a resource")
 }
 
 // api.js
