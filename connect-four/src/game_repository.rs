@@ -1,0 +1,86 @@
+use crate::mongo_connection::Conn;
+use crate::game::{Game, InsertableGame};
+use mongodb::{bson, oid::ObjectId, coll::results::DeleteResult, doc, error::Error};
+use crate::r2d2_mongodb::mongodb::db::ThreadedDatabase;
+
+pub fn get_all_games_handler(connection: &Conn) -> Result<Vec<Game>, Error> {
+    let cursor = connection.collection("games").find(None, None).unwrap();
+
+    cursor
+        .map(|result| match result {
+            Ok(doc) => match bson::from_bson(bson::Bson::Document(doc)) {
+                Ok(result_model) => Ok(result_model),
+                Err(err) => Err(Error::DefaultError(String::from(""))),
+            },
+            Err(err) => Err(err),
+        })
+        .collect::<Result<Vec<Game>, Error>>()
+}
+
+pub fn get_game_with_id_handler(id: ObjectId, conn: &Conn) -> Result<Option<Game>, Error> {
+    match conn.collection("games").find_one(Some(doc! {"_id": id}), None)
+        {
+            Ok(r) => match r {
+                Some(r_doc) => match bson::from_bson(bson::Bson::Document(r_doc)) {
+                    Ok(r_model) => Ok(Some(r_model)),
+                    Err(_) => Err(Error::DefaultError(String::from("Failed to reverse BSON",))),
+                },
+                None => Ok(None),
+            },
+            Err(err) => Err(err),
+        }
+}
+
+pub fn update_game_with_id_handler(id: bson::oid::ObjectId, game: Game, connection: &Conn) {
+    let mut game = game.clone();
+    game.id = Some(id.clone());
+    match bson::to_bson(&game) {
+        Ok(model_bson) => match model_bson {
+            bson::Bson::Document(doc) => {
+                connection
+                    .collection("games")
+                    .replace_one(doc! {"_id": id}, doc, None);
+            }
+            _ => {},
+        },
+        Err(_) => {},
+    };
+}
+
+pub fn insert_game_handler(game: Game, connection: &Conn) -> Result<ObjectId, Error> {
+    let new_game = InsertableGame{
+        gameType: game.gameType,
+        gameNumber: game.gameNumber,
+        Player1Name: game.Player1Name,
+        Player2Name: game.Player2Name,
+        WinnerName: game.WinnerName,
+        GameDate: game.GameDate
+    };
+    match bson::to_bson(&new_game) {
+        Ok(model_bson) => match model_bson {
+            bson::Bson::Document(model_doc) => {
+                match connection
+                    .collection("games")
+                    .insert_one(model_doc, None)
+                    {
+                        Ok(res) => match res.inserted_id {
+                            Some(res) => match bson::from_bson(res) {
+                                Ok(res) => Ok(res),
+                                Err(_) => Err(Error::DefaultError(String::from("Failed to read BSON")))
+                            },
+                            None => Err(Error::DefaultError(String::from("None")))
+                        },
+                        Err(err) => Err(err),
+                    }
+            }
+            _ => Err(Error::DefaultError(String::from(
+                "Failed to create Document",
+            ))),
+        },
+        Err(_) => Err(Error::DefaultError(String::from("Failed to create BSON"))),
+    }
+}
+
+pub fn delete_game_handler(id: ObjectId, conn: &Conn) -> Result<DeleteResult, Error> {
+    conn.collection("games").delete_one(doc! {"_id": id}, None)
+}
