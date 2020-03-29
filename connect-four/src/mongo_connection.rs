@@ -19,7 +19,7 @@ pub struct Conn(pub PooledConnection<MongodbConnectionManager>);
 pub fn init_connection() -> Pool {
     let mongo_address = "localhost";
     let mongo_port = 27017 as u16;
-    let db_name = "Connect4DB";
+    let db_name = "Connect4RustDB";
     let manager = MongodbConnectionManager::new(
         ConnectionOptions::builder()
             .with_host(&mongo_address, mongo_port)
