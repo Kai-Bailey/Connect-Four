@@ -78,7 +78,7 @@ fn games_id_delete(id: String, connection: Conn) -> Result<Json<String>, Status>
 
 // users.js
 #[get("/")]
-fn users(connection: Conn) -> String {
+fn users() -> String {
     String::from("respond with a resource")
 }
 

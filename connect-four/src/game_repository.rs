@@ -10,9 +10,15 @@ pub fn get_all_games_handler(connection: &Conn) -> Result<Vec<Game>, Error> {
         .map(|result| match result {
             Ok(doc) => match bson::from_bson(bson::Bson::Document(doc)) {
                 Ok(result_model) => Ok(result_model),
-                Err(_) => Err(Error::DefaultError(String::from(""))),
+                Err(err) => {
+                    println!("get_all_games_handler -> {:?}", err);
+                    Err(Error::DefaultError(String::from("")))
+                },
             },
-            Err(err) => Err(err),
+            Err(err) => {
+                println!("get_all_games_handler -> {:?}", err);
+                Err(err)
+            },
         })
         .collect::<Result<Vec<Game>, Error>>()
 }
