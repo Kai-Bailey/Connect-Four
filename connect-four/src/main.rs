@@ -76,33 +76,38 @@ fn games_id_delete(id: String, connection: Conn) -> Result<Json<String>, Status>
 
 // users.js
 #[get("/")]
-fn users(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
-    Err(Status::NotFound)
+fn users() -> String {
+    String::from("respond with a resource")
 }
 
 // api.js
 #[get("/posts")]
 fn api_posts_get(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
+    // TODO
     Err(Status::NotFound)
 }
 
 #[post("/posts")]
 fn api_posts_post(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
+    // TODO
     Err(Status::NotFound)
 }
 
 #[put("/posts/<id>")]
 fn api_posts_id_put(id: i64, connection: Conn) -> Result<Json<Vec<Game>>, Status> {
+    // TODO
     Err(Status::NotFound)
 }
 
 #[get("/posts/<id>")]
 fn api_posts_id_get(id: i64, connection: Conn) -> Result<Json<Vec<Game>>, Status> {
+    // TODO
     Err(Status::NotFound)
 }
 
 #[delete("/posts/<id>")]
 fn api_posts_id_delete(id: i64, connection: Conn) -> Result<Json<Vec<Game>>, Status> {
+    // TODO
     Err(Status::NotFound)
 }
 
