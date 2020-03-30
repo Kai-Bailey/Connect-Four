@@ -22,8 +22,8 @@ Open the game at http://localhost:8000/
 ### Rocket
 [Rocket](https://rocket.rs/) is a web framework for Rust. Rocket routes incoming requsts to their approriate handlers. We choice Rocket because of its great developer support, simplicity and support for JSON.
 
-
-
+### Cargo-web
+[Cargo-web](https://github.com/koute/cargo-web) is a build tool to convert rust to WebAssembly. We chose this tool over alternatives such as wasm-pack because it allows us to build rust front-end and back-end seperately.
 ## FAQ
 ### What can we do on a computer than we can’t do on a printed board?
 Computer games have two main advantages over their physical counter part. The first is the ability to play against other players located anywhere in the world. The second advantage online games have is economy of scale. Once an online game is built each addition additional new players cost pennies in server fees. In comparison, everytime a new board game is purchased a physical board and pieces must be manufactured creating a significant cost per new user. Online games scale much better than physical games.
