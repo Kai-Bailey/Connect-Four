@@ -66,15 +66,15 @@ impl Game {
                 handler.show_grid(&self.grid);
                 let winner = result.unwrap();
                 match winner {
-                    Chip::P1 => {
+                    1 => {
                         self.winner = self.p1.clone();
                         handler.game_over(self.winner.clone());
                     }
-                    Chip::P2 => {
+                    2 => {
                         self.winner = self.p2.clone();
                         handler.game_over(self.winner.clone());
                     }
-                    Chip::Empty => {
+                    _ => {
                         println!("error");
                     }
                 }
@@ -88,24 +88,24 @@ impl Game {
 
     }
 
-    fn check_tile(&self, target: Chip, r: i32, c: i32) -> bool{
-        if !(r >=0 && r < self.grid.cols[0].items.len() as i32) {
+    fn check_tile(&self, target: u32, r: i32, c: i32) -> bool{
+        if !(r >=0 && r < self.grid.rows[0].items.len() as i32) {
             return false;
         }
-        if !(c >= 0 && c < self.grid.cols.len() as i32) {
+        if !(c >= 0 && c < self.grid.rows.len() as i32) {
             return false;
         }
-        if target == self.grid.cols[c as usize].items[r as usize] {
+        if target == self.grid.rows[c as usize].items[r as usize] {
             return true;
         }
         return false;
     }
 
-    fn check_win(&self) -> Option<Chip>{
-        for c in 0..self.grid.cols.len() as i32 {
-            for r in 0..self.grid.cols[0].items.len() as i32 {
-                let target = self.grid.cols[c as usize].items[r as usize];
-                if target == Chip::Empty {
+    fn check_win(&self) -> Option<u32>{
+        for c in 0..self.grid.rows.len() as i32 {
+            for r in 0..self.grid.rows[0].items.len() as i32 {
+                let target = self.grid.rows[c as usize].items[r as usize];
+                if target == 0 {
                     // dont match against empty spaces
                     continue;
                 }
@@ -140,34 +140,94 @@ impl Game {
         return None;
     }
 
-    fn ai_move() {
+    fn ai_move(&self) {
+//        let choice;
+        let state = &self.grid.clone();
 
+    }
+
+    fn ai_check_state(state: Grid) -> (i64, i64){
+        let mut winVal: i64 = 0;
+        let mut chainVal: i64 = 0;
+        let mut temp_r: i64 = 0;
+        let mut temp_b: i64 = 0;
+        let mut temp_br: i64 = 0;
+        let mut temp_tr: i64 = 0;
+
+        for i in 0..6 {
+            for j in 0..7 {
+                temp_r = 0;
+                temp_b = 0;
+                temp_br = 0;
+                temp_tr = 0;
+
+                for k in 0..4 {
+                    if j + k < 7 {
+                        temp_r += state.rows[j + k].items[i] as i64;
+                    }
+                    if i + k < 6 {
+                        temp_b += state.rows[j].items[i+k] as i64;
+                    }
+                    if i + k < 6 && j + k < 7 {
+                        temp_br += state.rows[j+k].items[i+k] as i64;
+                    }
+                    if i - k >= 0 && j + k < 7 {
+                        temp_tr += state.rows[j + k].items[i - k] as i64;
+                    }
+                }
+                chainVal += temp_r * temp_r + temp_r;
+                chainVal += temp_b * temp_b * temp_b;
+                chainVal += temp_br * temp_br * temp_br;
+                chainVal += temp_tr * temp_tr * temp_tr;
+
+                if i64::abs(temp_r) == 4 {
+                    winVal = temp_r;
+                }
+                else if i64::abs(temp_b) == 4 {
+                    winVal = temp_b;
+                }
+                else if i64::abs(temp_br) == 4 {
+                    winVal = temp_br;
+                }
+                else if i64::abs(temp_tr) == 4 {
+                    winVal = temp_tr;
+                }
+            }
+        }
+        return (winVal, chainVal);
     }
 }
 
+#[derive(Clone)]
 pub struct Grid {
-    cols: Vec<Col>
+    rows: Vec<Row>
 }
+
+//impl Clone for Grid {
+//    fn clone(&self) -> Self {
+//        Grid { rows: vec![] }
+//    }
+//}
 
 impl Grid {
     pub(crate) fn new(row_size: usize, col_size: usize) -> Grid {
-        let mut grid = Grid{ cols: vec![] };
+        let mut grid = Grid{ rows: vec![] };
         for _ in 0..row_size {
-            let col = Col::new(col_size);
-            grid.cols.push(col);
+            let row = Row::new(row_size);
+            grid.rows.push(row);
         }
         grid
     }
 
     pub fn insert_chip(&mut self, col: usize, is_p1: bool) -> Result<(), ()> {
-        for x in self.cols[col].items.iter_mut().rev() {
-            match x {
-                Chip::Empty => {
+        for r in (0..self.rows.len()).rev() {
+            match self.rows[r].items[col] {
+                0 => {
                     if is_p1 {
-                        *x = Chip::P1;
+                        self.rows[r].items[col] = 1;
                     }
                     else{
-                        *x = Chip::P2;
+                        self.rows[r].items[col] = 2;
                     }
                     return Ok(());
                 }
@@ -180,13 +240,14 @@ impl Grid {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for r in 0..self.cols[0].items.len() {
-            for c in 0..self.cols.len() {
-                let chip = &self.cols[c].items[r];
+        for r in 0..self.rows.len() {
+            for c in 0..self.rows[0].items.len() {
+                let chip = &self.rows[r].items[c];
                 match *chip {
-                    Chip::Empty => write!(f, "_"),
-                    Chip::P1 => write!(f, "R"),
-                    Chip::P2 => write!(f, "Y")
+                    0 => write!(f, "_"),
+                    1 => write!(f, "R"),
+                    2 => write!(f, "Y"),
+                    _ => Err(std::fmt::Error)
                 };
                 write!(f, " ");
             }
@@ -196,24 +257,18 @@ impl fmt::Display for Grid {
     }
 }
 
-struct Col {
-    items: Vec<Chip>
+#[derive(Clone)]
+struct Row {
+    items: Vec<u32>
 }
 
-impl Col {
-    fn new(size: usize) -> Col {
-        let mut col = Col{ items: vec![] };
-        col.items = Vec::new();
+impl Row {
+    fn new(size: usize) -> Row {
+        let mut row = Row{ items: vec![] };
+        row.items = Vec::new();
         for _ in 0..size {
-            col.items.push(Chip::Empty);
+            row.items.push(0);
         }
-        col
+        row
     }
-}
-
-#[derive(PartialEq, Copy, Clone)]
-enum Chip {
-    Empty,
-    P1,
-    P2
 }
