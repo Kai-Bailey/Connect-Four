@@ -1,13 +1,16 @@
 use std::fmt;
 use std::collections::{HashMap, VecDeque};
 use std::cmp::max;
+use rand::Rng;
 
 struct Cli_interface { }
 
 pub trait GameEvents {
     fn introduction(&self);
     fn show_grid(&self, grid: &Grid);
+    fn player_turn_message(&self, p1_turn: bool);
     fn player_turn(&self, p1_turn: bool) -> Result<usize, ()>;
+    fn selected_column(&self, player: String, col: usize);
     fn animate_chip(&self);
     fn invalid_move(&self);
     fn game_over(&self, winner: String);
@@ -51,6 +54,18 @@ impl Game {
         let mut p1_turn = true;
         while self.state == State::Running {
             handler.show_grid(&self.grid);
+            handler.player_turn_message(p1_turn);
+
+            if !p1_turn && self.with_ai {
+                let col_num = self.ai_move(-1);
+                if self.grid.insert_chip(col_num, p1_turn).is_err() {
+                    continue;
+                }
+                handler.selected_column(self.p1.clone(), col_num);
+                p1_turn = !p1_turn;
+                continue;
+            }
+
             let sel_col = handler.player_turn(p1_turn);
             if sel_col.is_ok() {
                 let col_num = sel_col.unwrap();
@@ -58,6 +73,13 @@ impl Game {
                     handler.invalid_move();
                     continue;
                 }
+                if p1_turn {
+                    handler.selected_column(self.p1.clone(), col_num);
+                }
+                else{
+                    handler.selected_column(self.p2.clone(), col_num);
+                }
+
             }
             else{
                 continue;
@@ -89,7 +111,7 @@ impl Game {
 
     }
 
-    fn check_tile(&self, target: u32, r: i32, c: i32) -> bool{
+    fn check_tile(&self, target: i64, r: i32, c: i32) -> bool{
         if !(r >=0 && r < self.grid.rows[0].items.len() as i32) {
             return false;
         }
@@ -102,7 +124,7 @@ impl Game {
         return false;
     }
 
-    fn check_win(&self) -> Option<u32>{
+    fn check_win(&self) -> Option<i64>{
         for c in 0..self.grid.rows.len() as i32 {
             for r in 0..self.grid.rows[0].items.len() as i32 {
                 let target = self.grid.rows[c as usize].items[r as usize];
@@ -141,10 +163,12 @@ impl Game {
         return None;
     }
 
-    fn ai_move(&self) {
-//        let choice;
+    fn ai_move(&self, ai_move_val: i64) -> usize{
         let state = &self.grid.clone();
-
+        let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
+        let choice = choice_val.1;
+        let val = choice_val.0;
+        return choice as usize;
     }
 
     fn ai_check_state(state: &Grid) -> (i64, i64){
@@ -172,7 +196,7 @@ impl Game {
                     if i + k < 6 && j + k < 7 {
                         temp_br += state.rows[i+k].items[j+k] as i64;
                     }
-                    if i - k >= 0 && j + k < 7 {
+                    if i as i64 - k as i64 >= 0 && j + k < 7 {
                         temp_tr += state.rows[i-k].items[j+k] as i64;
                     }
                 }
@@ -198,7 +222,7 @@ impl Game {
         return (winVal, chainVal);
     }
 
-    fn ai_value(&self, state: Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64) {
+    fn ai_value(&self, state: &Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64) {
         let val = Game::ai_check_state(&state);
         if depth >= 4 {
             let mut retValue = 0;
@@ -220,7 +244,7 @@ impl Game {
         if win == 4 * ai_move_val {
             return ((999999 - depth * depth) as i64, -1);
         }
-        if (win == 4 * ai_move_val * -1) {
+        if win == 4 * ai_move_val * -1 {
             return (999999 * -1 - ((depth * depth) as i64), -1);
         }
 
@@ -232,19 +256,20 @@ impl Game {
 
     fn ai_max_state(&self, state: &Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64){
         let mut v:i64 = -100000000007;
-        let mut _move = -1;
+        let mut _move: i64 = -1;
         let mut tempVal: (i64, i64) = (0,0);
         let mut tempState:Grid;
         let mut moveQueue: VecDeque<usize> = VecDeque::new();
+        let mut alpha = alpha;
 
         for j in 0..self.grid.rows[0].items.len() {
             let tempStateOpt = self.ai_fill_map(state, j, ai_move_val);
             if tempStateOpt.is_some() {
                 tempState = tempStateOpt.unwrap();
-                tempVal = self.ai_value(tempState, depth, alpha, beta, ai_move_val);
+                tempVal = self.ai_value(&tempState, depth, alpha, beta, ai_move_val);
                 if tempVal.0 > v {
-                    v = tempVal[0];
-                    _move = j;
+                    v = tempVal.0;
+                    _move = j as i64;
                     moveQueue.clear();
                     moveQueue.push_back(j);
                 } else if tempVal.0 == v {
@@ -252,18 +277,24 @@ impl Game {
                 }
 
                 if v > beta {
-                    _move = choose(moveQueue);
-                    return (v, _move);
+                    _move = Game::choose(moveQueue) as i64;
+                    return (v, _move as i64);
                 }
                 alpha = max(alpha, v);
             }
         }
-        move = choose(moveQueue);
+        _move = Game::choose(moveQueue) as i64;
 
-        return (v, _move);
+        return (v, _move as i64);
     }
 
-    fn ai_min_state(&self, state: Grid, depth: u32, alpha: i64, beta: i64) -> (i64, i64) {
+    fn choose(choice: VecDeque<usize>) -> usize{
+        let mut rng = rand::thread_rng();
+        let rand_idx = rng.gen_range(0, choice.len());
+        return choice[rand_idx as usize];
+    }
+
+    fn ai_min_state(&self, state: &Grid, depth: u32, alpha: i64, beta: i64) -> (i64, i64) {
         return (0, 0);
     }
 
@@ -298,7 +329,7 @@ impl Grid {
     pub(crate) fn new(row_size: usize, col_size: usize) -> Grid {
         let mut grid = Grid{ rows: vec![] };
         for _ in 0..row_size {
-            let row = Row::new(row_size);
+            let row = Row::new(col_size);
             grid.rows.push(row);
         }
         grid
@@ -344,7 +375,7 @@ impl fmt::Display for Grid {
 
 #[derive(Clone)]
 struct Row {
-    items: Vec<u32>
+    items: Vec<i64>
 }
 
 impl Row {
