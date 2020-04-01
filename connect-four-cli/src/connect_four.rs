@@ -1,5 +1,6 @@
 use std::fmt;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
+use std::cmp::max;
 
 struct Cli_interface { }
 
@@ -146,7 +147,7 @@ impl Game {
 
     }
 
-    fn ai_check_state(state: Grid) -> (i64, i64){
+    fn ai_check_state(state: &Grid) -> (i64, i64){
         let mut winVal: i64 = 0;
         let mut chainVal: i64 = 0;
         let mut temp_r: i64 = 0;
@@ -163,16 +164,16 @@ impl Game {
 
                 for k in 0..4 {
                     if j + k < 7 {
-                        temp_r += state.rows[j + k].items[i] as i64;
+                        temp_r += state.rows[i].items[j+k] as i64;
                     }
                     if i + k < 6 {
-                        temp_b += state.rows[j].items[i+k] as i64;
+                        temp_b += state.rows[i+k].items[j] as i64;
                     }
                     if i + k < 6 && j + k < 7 {
-                        temp_br += state.rows[j+k].items[i+k] as i64;
+                        temp_br += state.rows[i+k].items[j+k] as i64;
                     }
                     if i - k >= 0 && j + k < 7 {
-                        temp_tr += state.rows[j + k].items[i - k] as i64;
+                        temp_tr += state.rows[i-k].items[j+k] as i64;
                     }
                 }
                 chainVal += temp_r * temp_r + temp_r;
@@ -196,18 +197,102 @@ impl Game {
         }
         return (winVal, chainVal);
     }
+
+    fn ai_value(&self, state: Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64) {
+        let val = Game::ai_check_state(&state);
+        if depth >= 4 {
+            let mut retValue = 0;
+            let mut winVal = val.0;
+            let mut chainVal = val.1 * ai_move_val;
+            retValue = chainVal;
+
+            if winVal == 4 * ai_move_val {
+                retValue = 999999;
+            }
+            else if winVal == 4 * ai_move_val * -1 {
+                retValue = 999999 * -1;
+            }
+            retValue -= (depth * depth) as i64;
+
+            return (retValue, -1);
+        }
+        let win = val.0;
+        if win == 4 * ai_move_val {
+            return ((999999 - depth * depth) as i64, -1);
+        }
+        if (win == 4 * ai_move_val * -1) {
+            return (999999 * -1 - ((depth * depth) as i64), -1);
+        }
+
+        if depth % 2 == 0 {
+            return self.ai_min_state(state, depth + 1, alpha, beta);
+        }
+        return self.ai_max_state(state, depth + 1, alpha, beta, ai_move_val);
+    }
+
+    fn ai_max_state(&self, state: &Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64){
+        let mut v:i64 = -100000000007;
+        let mut _move = -1;
+        let mut tempVal: (i64, i64) = (0,0);
+        let mut tempState:Grid;
+        let mut moveQueue: VecDeque<usize> = VecDeque::new();
+
+        for j in 0..self.grid.rows[0].items.len() {
+            let tempStateOpt = self.ai_fill_map(state, j, ai_move_val);
+            if tempStateOpt.is_some() {
+                tempState = tempStateOpt.unwrap();
+                tempVal = self.ai_value(tempState, depth, alpha, beta, ai_move_val);
+                if tempVal.0 > v {
+                    v = tempVal[0];
+                    _move = j;
+                    moveQueue.clear();
+                    moveQueue.push_back(j);
+                } else if tempVal.0 == v {
+                    moveQueue.push_back(j);
+                }
+
+                if v > beta {
+                    _move = choose(moveQueue);
+                    return (v, _move);
+                }
+                alpha = max(alpha, v);
+            }
+        }
+        move = choose(moveQueue);
+
+        return (v, _move);
+    }
+
+    fn ai_min_state(&self, state: Grid, depth: u32, alpha: i64, beta: i64) -> (i64, i64) {
+        return (0, 0);
+    }
+
+    fn ai_fill_map(&self, state: &Grid, column: usize, value: i64) -> Option<Grid>{
+        let mut tempMap = state.clone();
+        if tempMap.rows[0].items[column] != 0 || column <0 || column > 6 {
+            return None;
+        }
+        let mut done = false;
+        let mut row = 0;
+        for i in 0..self.grid.rows.len()-1 {
+            if tempMap.rows[i+1].items[column] != 0 {
+                done = true;
+                row = i;
+                break;
+            }
+        }
+        if (!done) {
+            row = 5;
+        }
+        tempMap.rows[row].items[column] = value;
+        return Some(tempMap);
+    }
 }
 
 #[derive(Clone)]
 pub struct Grid {
     rows: Vec<Row>
 }
-
-//impl Clone for Grid {
-//    fn clone(&self) -> Self {
-//        Grid { rows: vec![] }
-//    }
-//}
 
 impl Grid {
     pub(crate) fn new(row_size: usize, col_size: usize) -> Grid {
