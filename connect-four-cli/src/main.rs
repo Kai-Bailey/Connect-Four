@@ -60,11 +60,11 @@ fn retrieve_user_input() -> Result<String, ()> {
     }
 }
 
-struct WebInterface {
+struct CliInterface {
 
 }
 
-impl GameEvents for WebInterface {
+impl GameEvents for CliInterface {
     fn introduction(&self) {
 
     }
@@ -169,7 +169,7 @@ fn start_connect_four() {
         }
     }
 
-    let handler: WebInterface = WebInterface{};
+    let handler: CliInterface = CliInterface{};
     game.start_game(handler);
 }
 
