@@ -1,15 +1,13 @@
 use std::fmt;
-use std::collections::{HashMap, VecDeque};
-use std::cmp::max;
+use std::collections::{VecDeque};
+use std::cmp::{max, min};
 use rand::Rng;
-
-struct Cli_interface { }
 
 pub trait GameEvents {
     fn introduction(&self);
     fn show_grid(&self, grid: &Grid);
     fn player_turn_message(&self, p1_turn: bool);
-    fn player_turn(&self, p1_turn: bool) -> Result<usize, ()>;
+    fn player_turn(&self, col_size: usize) -> Result<usize, ()>;
     fn selected_column(&self, player: String, col: usize);
     fn animate_chip(&self);
     fn invalid_move(&self);
@@ -52,6 +50,7 @@ impl Game {
     pub fn start_game<H: GameEvents>(&mut self, handler: H) {
         handler.introduction();
         let mut p1_turn = true;
+        let col_size = self.grid.rows[0].items.len();
         while self.state == State::Running {
             handler.show_grid(&self.grid);
             handler.player_turn_message(p1_turn);
@@ -66,7 +65,7 @@ impl Game {
                 continue;
             }
 
-            let sel_col = handler.player_turn(p1_turn);
+            let sel_col = handler.player_turn(col_size);
             if sel_col.is_ok() {
                 let col_num = sel_col.unwrap();
                 if self.grid.insert_chip(col_num, p1_turn).is_err() {
@@ -167,78 +166,81 @@ impl Game {
         let state = &self.grid.clone();
         let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
         let choice = choice_val.1;
-        let val = choice_val.0;
+//        let val = choice_val.0;
         return choice as usize;
     }
 
     fn ai_check_state(state: &Grid) -> (i64, i64){
-        let mut winVal: i64 = 0;
-        let mut chainVal: i64 = 0;
+        let mut win_val: i64 = 0;
+        let mut chain_val: i64 = 0;
         let mut temp_r: i64 = 0;
         let mut temp_b: i64 = 0;
         let mut temp_br: i64 = 0;
         let mut temp_tr: i64 = 0;
 
-        for i in 0..6 {
-            for j in 0..7 {
+        let num_rows = state.rows.len();
+        let num_cols = state.rows[0].items.len();
+
+        for i in 0..num_rows {
+            for j in 0..num_cols {
                 temp_r = 0;
                 temp_b = 0;
                 temp_br = 0;
                 temp_tr = 0;
 
                 for k in 0..4 {
-                    if j + k < 7 {
+                    if j + k < num_cols {
                         temp_r += state.rows[i].items[j+k] as i64;
                     }
-                    if i + k < 6 {
+                    if i + k < num_rows {
                         temp_b += state.rows[i+k].items[j] as i64;
                     }
-                    if i + k < 6 && j + k < 7 {
+                    if i + k < num_rows && j + k < num_cols {
                         temp_br += state.rows[i+k].items[j+k] as i64;
                     }
-                    if i as i64 - k as i64 >= 0 && j + k < 7 {
+                    if i as i64 - k as i64 >= 0 && j + k < num_cols {
                         temp_tr += state.rows[i-k].items[j+k] as i64;
                     }
                 }
-                chainVal += temp_r * temp_r + temp_r;
-                chainVal += temp_b * temp_b * temp_b;
-                chainVal += temp_br * temp_br * temp_br;
-                chainVal += temp_tr * temp_tr * temp_tr;
+                chain_val += temp_r * temp_r + temp_r;
+                chain_val += temp_b * temp_b * temp_b;
+                chain_val += temp_br * temp_br * temp_br;
+                chain_val += temp_tr * temp_tr * temp_tr;
 
                 if i64::abs(temp_r) == 4 {
-                    winVal = temp_r;
+                    win_val = temp_r;
                 }
                 else if i64::abs(temp_b) == 4 {
-                    winVal = temp_b;
+                    win_val = temp_b;
                 }
                 else if i64::abs(temp_br) == 4 {
-                    winVal = temp_br;
+                    win_val = temp_br;
                 }
                 else if i64::abs(temp_tr) == 4 {
-                    winVal = temp_tr;
+                    win_val = temp_tr;
                 }
             }
         }
-        return (winVal, chainVal);
+        return (win_val, chain_val);
     }
 
     fn ai_value(&self, state: &Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64) {
         let val = Game::ai_check_state(&state);
         if depth >= 4 {
-            let mut retValue = 0;
-            let mut winVal = val.0;
-            let mut chainVal = val.1 * ai_move_val;
-            retValue = chainVal;
+            let mut ret_value = 0;
+            let win_val = val.0;
+            let chain_val = val.1 * ai_move_val;
+            ret_value = chain_val;
 
-            if winVal == 4 * ai_move_val {
-                retValue = 999999;
+            if win_val == 4 * ai_move_val {
+                ret_value = 999999;
             }
-            else if winVal == 4 * ai_move_val * -1 {
-                retValue = 999999 * -1;
+            else if win_val == 4 * ai_move_val * -1 {
+                ret_value = 999999 * -1;
             }
-            retValue -= (depth * depth) as i64;
+            ret_value -= (depth * depth) as i64;
 
-            return (retValue, -1);
+            return (ret_value, -1);
         }
         let win = val.0;
         if win == 4 * ai_move_val {
@@ -249,7 +251,7 @@ impl Game {
         }
 
         if depth % 2 == 0 {
-            return self.ai_min_state(state, depth + 1, alpha, beta);
+            return self.ai_min_state(state, depth + 1, alpha, beta, ai_move_val);
         }
         return self.ai_max_state(state, depth + 1, alpha, beta, ai_move_val);
     }
@@ -257,33 +259,33 @@ impl Game {
     fn ai_max_state(&self, state: &Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64){
         let mut v:i64 = -100000000007;
         let mut _move: i64 = -1;
-        let mut tempVal: (i64, i64) = (0,0);
-        let mut tempState:Grid;
-        let mut moveQueue: VecDeque<usize> = VecDeque::new();
+        let mut temp_val: (i64, i64) = (0,0);
+        let mut temp_state:Grid;
+        let mut move_queue: VecDeque<usize> = VecDeque::new();
         let mut alpha = alpha;
 
         for j in 0..self.grid.rows[0].items.len() {
-            let tempStateOpt = self.ai_fill_map(state, j, ai_move_val);
-            if tempStateOpt.is_some() {
-                tempState = tempStateOpt.unwrap();
-                tempVal = self.ai_value(&tempState, depth, alpha, beta, ai_move_val);
-                if tempVal.0 > v {
-                    v = tempVal.0;
+            let temp_state_opt = self.ai_fill_map(state, j, ai_move_val);
+            if temp_state_opt.is_some() {
+                temp_state = temp_state_opt.unwrap();
+                temp_val = self.ai_value(&temp_state, depth, alpha, beta, ai_move_val);
+                if temp_val.0 > v {
+                    v = temp_val.0;
                     _move = j as i64;
-                    moveQueue.clear();
-                    moveQueue.push_back(j);
-                } else if tempVal.0 == v {
-                    moveQueue.push_back(j);
+                    move_queue.clear();
+                    move_queue.push_back(j);
+                } else if temp_val.0 == v {
+                    move_queue.push_back(j);
                 }
 
                 if v > beta {
-                    _move = Game::choose(moveQueue) as i64;
+                    _move = Game::choose(move_queue) as i64;
                     return (v, _move as i64);
                 }
                 alpha = max(alpha, v);
             }
         }
-        _move = Game::choose(moveQueue) as i64;
+        _move = Game::choose(move_queue) as i64;
 
         return (v, _move as i64);
     }
@@ -294,29 +296,59 @@ impl Game {
         return choice[rand_idx as usize];
     }
 
-    fn ai_min_state(&self, state: &Grid, depth: u32, alpha: i64, beta: i64) -> (i64, i64) {
-        return (0, 0);
+    fn ai_min_state(&self, state: &Grid, depth: u32, alpha: i64, beta: i64, ai_move_val: i64) -> (i64, i64) {
+        let mut v:i64 = 100000000007;
+        let mut _move: i64 = -1;
+        let mut temp_val: (i64, i64) = (0,0);
+        let mut temp_state:Grid;
+        let mut move_queue: VecDeque<usize> = VecDeque::new();
+        let mut beta = beta;
+
+        for j in 0..self.grid.rows[0].items.len() {
+            let temp_state_opt = self.ai_fill_map(state, j, ai_move_val * -1);
+            if temp_state_opt.is_some() {
+                temp_state = temp_state_opt.unwrap();
+                temp_val = self.ai_value(&temp_state, depth, alpha, beta, ai_move_val);
+                if temp_val.0 < v {
+                    v = temp_val.0;
+                    _move = j as i64;
+                    move_queue.clear();
+                    move_queue.push_back(j);
+                } else if temp_val.0 == v {
+                    move_queue.push_back(j);
+                }
+
+                if v < alpha {
+                    _move = Game::choose(move_queue) as i64;
+                    return (v, _move as i64);
+                }
+                beta = min(beta, v);
+            }
+        }
+        _move = Game::choose(move_queue) as i64;
+
+        return (v, _move as i64);
     }
 
     fn ai_fill_map(&self, state: &Grid, column: usize, value: i64) -> Option<Grid>{
-        let mut tempMap = state.clone();
-        if tempMap.rows[0].items[column] != 0 || column <0 || column > 6 {
+        let mut temp_map = state.clone();
+        if temp_map.rows[0].items[column] != 0 || column < 0 || column >= state.rows[0].items.len() {
             return None;
         }
         let mut done = false;
         let mut row = 0;
         for i in 0..self.grid.rows.len()-1 {
-            if tempMap.rows[i+1].items[column] != 0 {
+            if temp_map.rows[i+1].items[column] != 0 {
                 done = true;
                 row = i;
                 break;
             }
         }
-        if (!done) {
+        if !done {
             row = 5;
         }
-        tempMap.rows[row].items[column] = value;
-        return Some(tempMap);
+        temp_map.rows[row].items[column] = value;
+        return Some(temp_map);
     }
 }
 
