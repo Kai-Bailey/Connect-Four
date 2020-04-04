@@ -1,0 +1,11 @@
+[package]
+name = "connect-four-frontend"
+version = "0.1.0"
+authors = ["Dinula De Silva", "Kai Bailey", "Hai Yang Xu"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+stdweb = "0.4.20"
+yew = { version = "0.13.0", features = ["std_web"] }
