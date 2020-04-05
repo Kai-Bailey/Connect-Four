@@ -13,3 +13,4 @@ yew-router = {version="0.11.0", features = ["std_web"]}
 web_logger = "0.2"
 log = "0.4.8"
 wee_alloc = "0.4.5"
+connect_four_cli = { path = "../connect-four-cli" }

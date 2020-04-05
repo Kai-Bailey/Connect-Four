@@ -14,23 +14,26 @@ pub trait GameEvents {
     fn game_over(&self, winner: String);
 }
 
-#[derive(PartialEq)]
-enum State {
+#[derive(Clone, PartialEq)]
+pub enum State {
     Done,
-    Running
+    Running,
+    NonStarted,
 }
 
+#[derive(Clone)]
 pub struct Game {
-    grid: Grid,
-    p1: String,
-    p2: String,
-    with_ai: bool,
-    state: State,
-    winner: String,
+    pub grid: Grid,
+    pub p1: String,
+    pub p2: String,
+    pub with_ai: bool,
+    pub state: State,
+    pub winner: String,
+    pub p1_turn: bool,
 }
 
 impl Game {
-    pub(crate) fn new(row_size: usize, col_size: usize, with_ai: bool, p1_name: String, p2_name: String) -> Game {
+    pub fn new(row_size: usize, col_size: usize, with_ai: bool, p1_name: String, p2_name: String) -> Game {
         let grid = Grid::new(row_size, col_size);
         let mut game = Game{
             grid,
@@ -38,7 +41,8 @@ impl Game {
             p2: p2_name,
             with_ai: false,
             state: State::Running,
-            winner: "".to_string()
+            winner: "".to_string(),
+            p1_turn: true
         };
         if with_ai {
             game.p2 = "Computer".to_string();
@@ -47,7 +51,11 @@ impl Game {
         game
     }
 
-    pub fn start_game<H: GameEvents>(&mut self, handler: H) {
+    pub fn start_game(&mut self) {
+        self.state = State::Running;
+    }
+
+    pub fn start_game_cli<H: GameEvents>(&mut self, handler: H) {
         handler.introduction();
         let mut p1_turn = true;
         let col_size = self.grid.rows[0].items.len();
@@ -108,6 +116,33 @@ impl Game {
     }
     fn post_game(&self) {
 
+    }
+
+    pub fn make_move(&mut self, col_num: usize) -> Result<(), ()>{
+        if self.grid.insert_chip(col_num, self.p1_turn).is_err() {
+            return Err(());
+        }
+
+        let result = self.check_win();
+        if result.is_some() {
+            let winner = result.unwrap();
+            match winner {
+                1 => {
+                    self.winner = self.p1.clone();
+                }
+                -1 => {
+                    self.winner = self.p2.clone();
+                }
+                _ => {
+                    println!("error");
+                }
+            }
+            self.state = State::Done;
+            self.post_game();
+        }
+
+        self.p1_turn = !self.p1_turn;
+        return Ok(());
     }
 
     fn check_tile(&self, target: i64, r: i32, c: i32) -> bool{
@@ -354,11 +389,11 @@ impl Game {
 
 #[derive(Clone)]
 pub struct Grid {
-    rows: Vec<Row>
+    pub rows: Vec<Row>
 }
 
 impl Grid {
-    pub(crate) fn new(row_size: usize, col_size: usize) -> Grid {
+    pub fn new(row_size: usize, col_size: usize) -> Grid {
         let mut grid = Grid{ rows: vec![] };
         for _ in 0..row_size {
             let row = Row::new(col_size);
@@ -375,7 +410,7 @@ impl Grid {
                         self.rows[r].items[col] = 1;
                     }
                     else{
-                        self.rows[r].items[col] = 2;
+                        self.rows[r].items[col] = -1;
                     }
                     return Ok(());
                 }
@@ -394,7 +429,7 @@ impl fmt::Display for Grid {
                 match *chip {
                     0 => write!(f, "_"),
                     1 => write!(f, "R"),
-                    2 => write!(f, "Y"),
+                    -1 => write!(f, "Y"),
                     _ => Err(std::fmt::Error)
                 };
                 write!(f, " ");
@@ -406,8 +441,8 @@ impl fmt::Display for Grid {
 }
 
 #[derive(Clone)]
-struct Row {
-    items: Vec<i64>
+pub struct Row {
+    pub items: Vec<i64>
 }
 
 impl Row {
