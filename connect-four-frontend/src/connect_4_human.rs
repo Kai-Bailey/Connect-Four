@@ -95,7 +95,7 @@ fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
     context.restore();
 }
 
-fn print_win(winner: String, is_draw: bool) {
+fn print_win(winner: String) {
     let canvas: CanvasElement = document()
         .query_selector("#gameboard")
         .unwrap()
@@ -104,6 +104,10 @@ fn print_win(winner: String, is_draw: bool) {
         .unwrap();
     let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
     let mut msg = "".to_string();
+    let mut is_draw = false;
+    if winner == "Draw" {
+        is_draw = true;
+    }
     if is_draw {
         msg.push_str("It's a draw");
     }
@@ -187,7 +191,7 @@ impl Component for Connect4HumanModel {
             with_ai: false,
             state: State::NonStarted,
             winner: "".to_string(),
-            p1_turn: false,
+            p_move: 0
         }));
         Connect4HumanModel {
             link,

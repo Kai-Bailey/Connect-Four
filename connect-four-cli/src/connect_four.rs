@@ -29,7 +29,7 @@ pub struct Game {
     pub with_ai: bool,
     pub state: State,
     pub winner: String,
-    pub p1_turn: bool,
+    pub p_move: i64
 }
 
 impl Game {
@@ -42,7 +42,7 @@ impl Game {
             with_ai: false,
             state: State::Running,
             winner: "".to_string(),
-            p1_turn: true
+            p_move: 0
         };
         if with_ai {
             game.p2 = "Computer".to_string();
@@ -65,7 +65,7 @@ impl Game {
 
             if !p1_turn && self.with_ai {
                 let col_num = self.ai_move(-1);
-                if self.grid.insert_chip(col_num, p1_turn).is_err() {
+                if self.grid.insert_chip(col_num, self.p_move).is_err() {
                     continue;
                 }
                 handler.selected_column(self.p1.clone(), col_num);
@@ -76,7 +76,7 @@ impl Game {
             let sel_col = handler.player_turn(col_size);
             if sel_col.is_ok() {
                 let col_num = sel_col.unwrap();
-                if self.grid.insert_chip(col_num, p1_turn).is_err() {
+                if self.grid.insert_chip(col_num, self.p_move).is_err() {
                     handler.invalid_move();
                     continue;
                 }
@@ -118,30 +118,39 @@ impl Game {
 
     }
 
+    fn player_move_translate(&self) -> i64{
+        if (self.p_move % 2) == 0 {
+            return 1;
+        }
+        return -1;
+    }
+
     pub fn make_move(&mut self, col_num: usize) -> Result<(), ()>{
-        if self.grid.insert_chip(col_num, self.p1_turn).is_err() {
+        let grid_val = self.player_move_translate();
+
+        if self.grid.insert_chip(col_num, grid_val).is_err() {
             return Err(());
         }
+
+        self.p_move += 1;
 
         let result = self.check_win();
         if result.is_some() {
             let winner = result.unwrap();
-            match winner {
-                1 => {
-                    self.winner = self.p1.clone();
-                }
-                -1 => {
-                    self.winner = self.p2.clone();
-                }
-                _ => {
-                    println!("error");
-                }
+            if winner > 0{
+                self.winner = self.p1.clone();
+            }
+            else if winner < 0 {
+                self.winner = self.p2.clone();
+            }
+            else if winner == 0{
+                println!("error");
+                self.winner = "Draw".to_string();
             }
             self.state = State::Done;
             self.post_game();
         }
 
-        self.p1_turn = !self.p1_turn;
         return Ok(());
     }
 
@@ -158,40 +167,56 @@ impl Game {
         return false;
     }
 
-    fn check_win(&self) -> Option<i64>{
-        for c in 0..self.grid.rows.len() as i32 {
-            for r in 0..self.grid.rows[0].items.len() as i32 {
-                let target = self.grid.rows[c as usize].items[r as usize];
-                if target == 0 {
-                    // dont match against empty spaces
-                    continue;
-                }
+    fn check_win(&self) -> Option<i64> {
+        let mut temp_r = 0;
+        let mut temp_b = 0;
+        let mut temp_br = 0;
+        let mut temp_tr = 0;
+
+        for i in 0..self.grid.rows.len() {
+            for j in 0..self.grid.rows[0].items.len() {
+                temp_r = 0;
+                temp_b = 0;
+                temp_br = 0;
+                temp_tr = 0;
+
                 for k in 0..4 {
-                    if self.check_tile(target, r, c-1) && self.check_tile(target, r, c-2) &&
-                        self.check_tile(target, r, c-3) {
-                        return Some(target);
+                    if j + k < 7 {
+                        temp_r += self.grid.rows[i].items[j + k];
                     }
-                    if self.check_tile(target, r-1, c) && self.check_tile(target, r-2, c) &&
-                        self.check_tile(target, r-3, c) {
-                        return Some(target);
+                    //from (i,j) to bottom
+                    if i + k < 6 {
+                        temp_b += self.grid.rows[i + k].items[j];
                     }
-                    if self.check_tile(target, r-1, c-1) && self.check_tile(target, r-2, c-2) &&
-                        self.check_tile(target, r-3, c-3) {
-                        return Some(target);
+
+                    //from (i,j) to bottom-right
+                    if i + k < 6 && j + k < 7 {
+                        temp_br += self.grid.rows[i + k].items[j + k];
                     }
-                    if self.check_tile(target, r+1, c-1) && self.check_tile(target, r+2, c-2) &&
-                        self.check_tile(target, r+3, c-3) {
-                        return Some(target);
-                    }
-                    if self.check_tile(target, r+1, c+1) && self.check_tile(target, r+2, c+2) &&
-                        self.check_tile(target, r+3, c+3) {
-                        return Some(target);
-                    }
-                    if self.check_tile(target, r-1, c+1) && self.check_tile(target, r-2, c+2) &&
-                        self.check_tile(target, r-3, c+3) {
-                        return Some(target);
+
+                    //from (i,j) to top-right
+                    if i as i64 - k as i64 >= 0 && j + k < 7 {
+                        temp_tr += self.grid.rows[i - k].items[j + k];
                     }
                 }
+                if i64::abs(temp_r) == 4 {
+                    return Some(temp_r);
+                } else if i64::abs(temp_b) == 4 {
+                    return Some(temp_b);
+                } else if i64::abs(temp_br) == 4 {
+                    return Some(temp_br);
+                } else if i64::abs(temp_tr) == 4 {
+                    return Some(temp_tr);
+                }
+            }
+        }
+
+        if self.p_move == 42 {
+            match self.state {
+                State::Done => {
+                    return Some(0);
+                }
+                _ => {}
             }
         }
         return None;
@@ -402,16 +427,11 @@ impl Grid {
         grid
     }
 
-    pub fn insert_chip(&mut self, col: usize, is_p1: bool) -> Result<(), ()> {
+    pub fn insert_chip(&mut self, col: usize, grid_val: i64) -> Result<(), ()> {
         for r in (0..self.rows.len()).rev() {
             match self.rows[r].items[col] {
                 0 => {
-                    if is_p1 {
-                        self.rows[r].items[col] = 1;
-                    }
-                    else{
-                        self.rows[r].items[col] = -1;
-                    }
+                    self.rows[r].items[col] = grid_val;
                     return Ok(());
                 }
                 _ => {}
