@@ -118,28 +118,6 @@ fn print_win(winner: String) {
     context.restore();
 }
 
-/*
-this.animate = function (column, move, to_row, cur_pos, callback) {
-        var fg_color = "transparent";
-        if (move >= 1) {
-            fg_color = "#ff4136";
-        } else if (move <= -1) {
-            fg_color = "#ffff00";
-        }
-        if (to_row * 75 >= cur_pos) {
-            this.clear();
-            this.draw();
-            this.drawCircle(75 * column + 100, cur_pos + 50, 25, fg_color, "black");
-            this.drawMask();
-            window.requestAnimationFrame(function () {
-                that.animate(column, move, to_row, cur_pos + 25, callback);
-            });
-        } else {
-            callback();
-        }
-    };
-*/
-
 fn animate(column: i64, move_val: i64, to_row: i64, cur_pos: i64, grid: Grid, game: Rc<RefCell<Game>>) {
     let mut cur_pos = cur_pos;
     let mut fg_color = "transparent";
