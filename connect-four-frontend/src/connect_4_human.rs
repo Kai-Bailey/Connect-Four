@@ -1,5 +1,4 @@
 use yew::{prelude::*, virtual_dom::VNode, Properties};
-use connect_four_cli::connect_four;
 
 pub struct Connect4HumanModel {
     link: ComponentLink<Self>,
@@ -16,7 +15,7 @@ use stdweb::web::{document, window, CanvasRenderingContext2d, FillRule};
 use stdweb::web::event::{ClickEvent, ResizeEvent};
 
 use stdweb::web::html_element::CanvasElement;
-use connect_four_cli::connect_four::{Game, Grid, State, GameEvents};
+use connect_four_cli::connect_four::{Game, Grid, State};
 use std::f64::consts::PI;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -37,7 +36,7 @@ pub enum Msg {
     gotPlayer1Name(String),
     gotPlayer2Name(String),
     startGame,
-    update,
+    clicked(Option<usize>),
 }
 
 fn draw_board() {
@@ -183,34 +182,6 @@ fn check_for_win(game:Rc<RefCell<Game>>){
     }
 }
 
-fn click_handler(col: Option<usize>, game:Rc<RefCell<Game>>) {
-    let state = game.clone().borrow_mut().state.clone();
-    match state {
-        State::Done => {
-            clear_canvas();
-            game.clone().borrow_mut().state = State::NonStarted;
-        },
-        State::Running => {
-            if col.is_some() {
-                let prev_grid = game.clone().borrow().grid.clone();
-                let insert_result = game.clone().borrow_mut().make_move(col.unwrap() as usize);
-                if insert_result.is_ok(){
-                    animate(col.unwrap() as i64,
-                            insert_result.unwrap().1 as i64,
-                            insert_result.unwrap().0 as i64,
-                            0,
-                            prev_grid,
-                            game.clone());
-                }
-            }
-        },
-        State::NonStarted => {
-
-        }
-    }
-    check_for_win(game.clone());
-}
-
 fn clear_canvas() {
     let canvas: CanvasElement = document()
         .query_selector("#gameboard")
@@ -269,8 +240,32 @@ impl Component for Connect4HumanModel {
                 draw_board();
                 self.game.borrow_mut().start_game();
             }
-            Msg::update => {
-                // used by links to indicate that component should re-render
+            Msg::clicked(col) => {
+                let state = self.game.borrow().state.clone();
+                match state {
+                    State::Done => {
+                        clear_canvas();
+                        self.game.clone().borrow_mut().state = State::NonStarted;
+                    },
+                    State::Running => {
+                        if col.is_some() {
+                            let prev_grid = self.game.borrow().grid.clone();
+                            let insert_result = self.game.borrow_mut().make_move(col.unwrap() as usize);
+                            if insert_result.is_ok(){
+                                animate(col.unwrap() as i64,
+                                        insert_result.unwrap().1 as i64,
+                                        insert_result.unwrap().0 as i64,
+                                        0,
+                                        prev_grid,
+                                        self.game.clone());
+                            }
+                        }
+                    },
+                    State::NonStarted => {
+
+                    }
+                }
+                check_for_win(self.game.clone());
             }
         }
         true
@@ -303,17 +298,16 @@ impl Component for Connect4HumanModel {
         let link = self.link.clone();
 
         canvas.add_event_listener(enclose!( (context) move |event: ClickEvent| {
-            let game = game_clone.clone();
             let x_click = event.client_x() - rect.get_left() as i32;
             let y_click = event.client_y() - rect.get_top() as i32;
-            click_handler(None, game.clone());
             for col in 0..7 {
                 let x_col = 75 * col + 100;
                 if (x_click - x_col) * (x_click - x_col) <= 25 * 25 {
-                    click_handler(Some(col as usize), game.clone());
+                    link.send_message(Msg::clicked(Some(col as usize)));
+                    return;
                 }
             }
-            link.send_message(Msg::update);
+            link.send_message(Msg::clicked(None));
         }));
 
         false

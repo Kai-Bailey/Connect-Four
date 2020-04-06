@@ -18,7 +18,7 @@ use crate::{
     how_to_toot::HowToTootModel, welcome::WelcomeModel,
 };
 use yew::virtual_dom::VNode;
-use yew_router::switch::{AllowMissing, Permissive};
+use yew_router::switch::{Permissive};
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;

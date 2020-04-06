@@ -65,54 +65,56 @@ impl Game {
 
             if !p1_turn && self.with_ai {
                 let col_num = self.ai_move(-1);
-                if self.grid.insert_chip(col_num, self.p_move).is_err() {
+                let grid_val = self.player_move_translate();
+                if self.grid.insert_chip(col_num, grid_val).is_err() {
                     continue;
                 }
+                self.p_move += 1;
                 handler.selected_column(self.p1.clone(), col_num);
                 p1_turn = !p1_turn;
-                continue;
             }
-
-            let sel_col = handler.player_turn(col_size);
-            if sel_col.is_ok() {
-                let col_num = sel_col.unwrap();
-                let insert_result = self.grid.insert_chip(col_num, self.p_move);
-                if insert_result.is_err() {
-                    handler.invalid_move();
+            else {
+                let sel_col = handler.player_turn(col_size);
+                if sel_col.is_ok() {
+                    let col_num = sel_col.unwrap();
+                    let grid_val = self.player_move_translate();
+                    let insert_result = self.grid.insert_chip(col_num, grid_val);
+                    if insert_result.is_err() {
+                        handler.invalid_move();
+                        continue;
+                    }
+                    self.p_move += 1;
+                    if p1_turn {
+                        handler.selected_column(self.p1.clone(), col_num);
+                    } else {
+                        handler.selected_column(self.p2.clone(), col_num);
+                    }
+                } else {
                     continue;
                 }
-                if p1_turn {
-                    handler.selected_column(self.p1.clone(), col_num);
-                }
-                else{
-                    handler.selected_column(self.p2.clone(), col_num);
-                }
-
-            }
-            else{
-                continue;
+                p1_turn = !p1_turn;
             }
             let result = self.check_win();
             if result.is_some() {
                 handler.show_grid(&self.grid);
                 let winner = result.unwrap();
-                match winner {
-                    1 => {
-                        self.winner = self.p1.clone();
-                        handler.game_over(self.winner.clone());
-                    }
-                    2 => {
-                        self.winner = self.p2.clone();
-                        handler.game_over(self.winner.clone());
-                    }
-                    _ => {
-                        println!("error");
-                    }
+                if winner >= 1 {
+                    self.winner = self.p1.clone();
+                    handler.game_over(self.winner.clone());
                 }
+                else if winner <= -1 {
+                    self.winner = self.p2.clone();
+                    handler.game_over(self.winner.clone());
+                }
+                else if winner == 0{
+                    self.winner = "Draw".to_string();
+                    println!("Draw");
+                }
+
                 self.state = State::Done;
                 self.post_game();
             }
-            p1_turn = !p1_turn;
+
         }
     }
     fn post_game(&self) {
