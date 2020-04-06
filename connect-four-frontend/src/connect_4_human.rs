@@ -37,7 +37,7 @@ pub enum Msg {
     gotPlayer1Name(String),
     gotPlayer2Name(String),
     startGame,
-    clickedCol(usize),
+    update,
 }
 
 fn draw_board() {
@@ -91,56 +91,10 @@ fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
     context.set_stroke_style_color(stroke.as_str());
     context.begin_path();
     context.arc(x, y, r, 0.0, 2.0 * PI, false);
-    //this.context.stroke();
     context.fill(FillRule::NonZero);
     context.restore();
 }
 
-/*
-this.win = function (player) {
-        this.paused = true;
-        this.won = true;
-        this.rejectClick = false;
-        var msg = null;
-        //var winner = null;
-        if (player > 0) {
-            msg = $scope.newGame.Player1Name + " wins";
-            $scope.newGame.WinnerName = $scope.newGame.Player1Name;
-           //winner = $scope.newGame.Player1Name;
-
-        } else if (player < 0) {
-            msg = $scope.newGame.Player2Name + " wins";
-            $scope.newGame.WinnerName = $scope.newGame.Player2Name;
-            //winner = $scope.newGame.Player2Name;
-        } else {
-            msg = "It's a draw";
-            $scope.newGame.WinnerName = 'Draw';
-           // winner = 'Draw';
-        }
-        //alert($scope.newGame.WinnerName+" wins");
-        msg += " - Click on game board to reset";
-        this.context.save();
-        this.context.font = '14pt sans-serif';
-        this.context.fillStyle = "#111";
-        this.context.fillText(msg, 130, 20);
-        this.context.restore();
-
-        postService.save($scope.newGame, function(){
-
-            console.log("succesfully saved");
-        });
-
-        this.canvas = document.getElementsByTagName("canvas")[0];
-	        this.canvas.addEventListener('click', function (e) {
-	            location.reload();
-	        });
-
-        button.disabled = false;
-
-        console.info(msg);
-
-    };
-*/
 fn print_win(winner: String, is_draw: bool) {
     let canvas: CanvasElement = document()
         .query_selector("#gameboard")
@@ -165,69 +119,18 @@ fn print_win(winner: String, is_draw: bool) {
     context.restore();
 }
 
-struct GuiInterface {
-    selected_col: Option<usize>,
-    game: Rc<RefCell<Game>>
-}
-
-impl GuiInterface {
-    fn select_col(&mut self, col: usize) {
-        self.selected_col = Some(col);
-    }
-}
-
-impl GameEvents for GuiInterface {
-    fn introduction(&self) {
-
-    }
-    fn show_grid(&self, grid: &Grid) {
-        draw(grid);
-    }
-
-    fn player_turn_message(&self, p1_turn: bool) {
-//        if p1_turn {
-//            println!("Player 1's turn");
-//        }
-//        else{
-//            println!("Player 2's turn");
-//        }
-    }
-
-    fn player_turn(&self, col_size: usize) -> Result<usize, ()> {
-        while self.selected_col.is_none() {}
-        return Ok(self.selected_col.unwrap());
-    }
-
-    fn selected_column(&self, player: String, col: usize) {
-//        println!("{} Selected Column {}", player, col)
-    }
-
-    fn animate_chip(&self) {
-
-    }
-    fn invalid_move(&self) {
-
-    }
-    fn game_over(&self, winner: String) {
-        println!("{} has won! Congratulations!", winner);
-    }
-}
-
-//enum GameState {
-//    NotStarted,
-//    P1Turn,
-//    P2Turn,
-//
-//}
-fn click_handler(col: usize, game:Rc<RefCell<Game>>) {
+fn click_handler(col: Option<usize>, game:Rc<RefCell<Game>>) {
     let state = game.clone().borrow_mut().state.clone();
     match state {
         State::Done => {
-
+            reset_canvas();
+            game.clone().borrow_mut().state = State::NonStarted;
         },
         State::Running => {
-            game.clone().borrow_mut().make_move(col as usize);
-            draw(&game.borrow_mut().grid);
+            if col.is_some() {
+                game.clone().borrow_mut().make_move(col.unwrap() as usize);
+                draw(&game.borrow_mut().grid);
+            }
         },
         State::NonStarted => {
 
@@ -250,8 +153,26 @@ fn click_handler(col: usize, game:Rc<RefCell<Game>>) {
     }
 
 }
-impl Connect4HumanModel {
 
+fn reset_canvas() {
+    let canvas: CanvasElement = document()
+        .query_selector("#gameboard")
+        .unwrap()
+        .unwrap()
+        .try_into()
+        .unwrap();
+    let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
+    context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
+}
+
+impl Connect4HumanModel {
+    fn is_started(&self) -> bool{
+        let state = self.game.clone().borrow().state.clone();
+        return match state {
+            State::NonStarted => false,
+            _ => true
+        }
+    }
 }
 
 impl Component for Connect4HumanModel {
@@ -291,14 +212,8 @@ impl Component for Connect4HumanModel {
                 draw_board();
                 self.game.borrow_mut().start_game();
             }
-            Msg::clickedCol(x) => {
-//                let result = self.game.make_move(x);
-//                if result.is_ok() {
-//                    self.draw();
-//                }
-//                js! {
-//                     alert("hello");
-//                }
+            Msg::update => {
+                // used by links to indicate that component should re-render
             }
         }
         true
@@ -307,8 +222,6 @@ impl Component for Connect4HumanModel {
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         true
     }
-
-
 
     fn mounted(&mut self) -> ShouldRender {
         let canvas: CanvasElement = document()
@@ -330,23 +243,20 @@ impl Component for Connect4HumanModel {
         let rect = canvas.get_bounding_client_rect();
 
         let game_clone = self.game.clone();
+        let link = self.link.clone();
 
-        canvas.add_event_listener(enclose!( (context, game_clone) move |event: ClickEvent| {
+        canvas.add_event_listener(enclose!( (context) move |event: ClickEvent| {
             let game = game_clone.clone();
             let x_click = event.client_x() - rect.get_left() as i32;
             let y_click = event.client_y() - rect.get_top() as i32;
-//            let callback = self.link.send_back(Msg::clickedCol);
+            click_handler(None, game.clone());
             for col in 0..7 {
                 let x_col = 75 * col + 100;
                 if (x_click - x_col) * (x_click - x_col) <= 25 * 25 {
-                    // add draw stuff here as well
-                    click_handler(col as usize, game.clone());
-
-//                    js! {
-//                        alert( @{col} );
-//                    };
+                    click_handler(Some(col as usize), game.clone());
                 }
             }
+            link.send_message(Msg::update);
         }));
 
         false
@@ -354,7 +264,7 @@ impl Component for Connect4HumanModel {
 
     fn view(&self) -> VNode {
         let title;
-        if self.gameStarted {
+        if self.is_started() {
             title = "Human VS Human Connect 4";
         } else {
             title = "Enter Player Names";
@@ -367,7 +277,7 @@ impl Component for Connect4HumanModel {
                <hr style="width:50px;border:5px solid red" class="w3-round"/>
             </div>
             <div class="col-md-offset-4 col-md-8">
-               { if self.gameStarted {
+               { if self.is_started() {
                     html! {
                     <div>
                         <h4>{"New Game: "} {&self.player1Name} {" VS "} {&self.player2Name}</h4>
@@ -389,21 +299,4 @@ impl Component for Connect4HumanModel {
          </div>
         }
     }
-    /*
-this.draw = function () {
-        var x, y;
-        var fg_color;
-        for (y = 0; y < 6; y++) {
-            for (x = 0; x < 7; x++) {
-                fg_color = "transparent";
-                if (this.map[y][x] >= 1) {
-                    fg_color = "#ff4136";
-                } else if (this.map[y][x] <= -1) {
-                    fg_color = "#ffff00";
-                }
-                this.drawCircle(75 * x + 100, 75 * y + 50, 25, fg_color, "black");
-            }
-        }
-    };
-    */
 }
