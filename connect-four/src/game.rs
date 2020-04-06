@@ -28,3 +28,10 @@ pub struct InsertableGame {
     #[serde(with = "ts_milliseconds")]
     pub GameDate: DateTime<Utc>,
 }
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct PlayerToWins {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub count: String,
+}

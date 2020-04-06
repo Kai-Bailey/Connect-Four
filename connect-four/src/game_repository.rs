@@ -1,5 +1,5 @@
 use crate::mongo_connection::Conn;
-use crate::game::{Game, InsertableGame};
+use crate::game::{Game, InsertableGame, PlayerToWins};
 use mongodb::{bson, oid::ObjectId, coll::results::DeleteResult, doc, error::Error};
 use crate::r2d2_mongodb::mongodb::db::ThreadedDatabase;
 
@@ -34,6 +34,27 @@ pub fn get_game_with_id_handler(id: ObjectId, conn: &Conn) -> Result<Option<Game
                 None => Ok(None),
             },
             Err(err) => Err(err),
+        }
+}
+
+
+pub fn get_wins_by_player(conn: &Conn) -> Result<Vec<bson::Document>, Error> {
+    match conn.collection("games").aggregate(
+        vec![
+            doc! {
+                "$group" => {
+                    "_id" => "$WinnerName",
+                    "count": { "$sum": 1 }
+                }
+            }
+        ],
+        None) {
+            Ok(doc) => {
+                Ok(doc.into_iter()
+                    .map(|doc| doc.unwrap())
+                    .collect::<Vec<_>>())
+            }
+            Err(err) => Err(err)
         }
 }
 
