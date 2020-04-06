@@ -76,7 +76,8 @@ impl Game {
             let sel_col = handler.player_turn(col_size);
             if sel_col.is_ok() {
                 let col_num = sel_col.unwrap();
-                if self.grid.insert_chip(col_num, self.p_move).is_err() {
+                let insert_result = self.grid.insert_chip(col_num, self.p_move);
+                if insert_result.is_err() {
                     handler.invalid_move();
                     continue;
                 }
@@ -125,10 +126,11 @@ impl Game {
         return -1;
     }
 
-    pub fn make_move(&mut self, col_num: usize) -> Result<(), ()>{
+    pub fn make_move(&mut self, col_num: usize) -> Result<(usize, usize), ()>{
         let grid_val = self.player_move_translate();
 
-        if self.grid.insert_chip(col_num, grid_val).is_err() {
+        let insert_result = self.grid.insert_chip(col_num, grid_val);
+        if insert_result.is_err() {
             return Err(());
         }
 
@@ -151,7 +153,7 @@ impl Game {
             self.post_game();
         }
 
-        return Ok(());
+        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize));
     }
 
     fn check_tile(&self, target: i64, r: i32, c: i32) -> bool{
@@ -427,12 +429,12 @@ impl Grid {
         grid
     }
 
-    pub fn insert_chip(&mut self, col: usize, grid_val: i64) -> Result<(), ()> {
+    pub fn insert_chip(&mut self, col: usize, grid_val: i64) -> Result<(usize), ()> {
         for r in (0..self.rows.len()).rev() {
             match self.rows[r].items[col] {
                 0 => {
                     self.rows[r].items[col] = grid_val;
-                    return Ok(());
+                    return Ok((r));
                 }
                 _ => {}
             }

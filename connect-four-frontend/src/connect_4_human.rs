@@ -104,11 +104,7 @@ fn print_win(winner: String) {
         .unwrap();
     let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
     let mut msg = "".to_string();
-    let mut is_draw = false;
     if winner == "Draw" {
-        is_draw = true;
-    }
-    if is_draw {
         msg.push_str("It's a draw");
     }
     else{
@@ -123,42 +119,99 @@ fn print_win(winner: String) {
     context.restore();
 }
 
+/*
+this.animate = function (column, move, to_row, cur_pos, callback) {
+        var fg_color = "transparent";
+        if (move >= 1) {
+            fg_color = "#ff4136";
+        } else if (move <= -1) {
+            fg_color = "#ffff00";
+        }
+        if (to_row * 75 >= cur_pos) {
+            this.clear();
+            this.draw();
+            this.drawCircle(75 * column + 100, cur_pos + 50, 25, fg_color, "black");
+            this.drawMask();
+            window.requestAnimationFrame(function () {
+                that.animate(column, move, to_row, cur_pos + 25, callback);
+            });
+        } else {
+            callback();
+        }
+    };
+*/
+
+fn animate(column: i64, move_val: i64, to_row: i64, cur_pos: i64, grid: Grid, game: Rc<RefCell<Game>>) {
+    let mut cur_pos = cur_pos;
+    let mut fg_color = "transparent";
+    if move_val % 2 == 0 {
+        fg_color = "#ff4136";
+    }
+    else if move_val % 2 == 1 {
+        fg_color = "#ffff00";
+    }
+
+    if to_row * 75 >= cur_pos {
+        clear_canvas();
+        draw(&grid.clone());
+        draw_circle((75 * column + 100) as f64, (cur_pos + 50) as f64, 25.0,
+                    fg_color.to_string(), "black".to_string());
+        draw_board();
+        window().request_animation_frame(move |_| {
+            animate(column, move_val, to_row, cur_pos + 25.0 as i64, grid.clone(), game)
+        });
+    }
+    else{
+        check_for_win(game.clone());
+    }
+}
+
+fn check_for_win(game:Rc<RefCell<Game>>){
+    // check if game ended after move
+    let state = game.clone().borrow_mut().state.clone();
+    match state {
+        State::Done => {
+            // draw finished
+            print_win(game.clone().borrow_mut().winner.clone());
+        },
+        State::Running => {
+
+        },
+        State::NonStarted => {
+
+        }
+    }
+}
+
 fn click_handler(col: Option<usize>, game:Rc<RefCell<Game>>) {
     let state = game.clone().borrow_mut().state.clone();
     match state {
         State::Done => {
-            reset_canvas();
+            clear_canvas();
             game.clone().borrow_mut().state = State::NonStarted;
         },
         State::Running => {
             if col.is_some() {
-                game.clone().borrow_mut().make_move(col.unwrap() as usize);
-                draw(&game.borrow_mut().grid);
+                let prev_grid = game.clone().borrow().grid.clone();
+                let insert_result = game.clone().borrow_mut().make_move(col.unwrap() as usize);
+                if insert_result.is_ok(){
+                    animate(col.unwrap() as i64,
+                            insert_result.unwrap().1 as i64,
+                            insert_result.unwrap().0 as i64,
+                            0,
+                            prev_grid,
+                            game.clone());
+                }
             }
         },
         State::NonStarted => {
 
         }
     }
-
-    // check if game ended after move
-    let state = game.clone().borrow_mut().state.clone();
-    match state {
-        State::Done => {
-            // draw finished
-            print_win(game.clone().borrow_mut().winner.clone(), false);
-        },
-        State::Running => {
-
-        },
-        State::NonStarted => {
-
-        }
-    }
-
+    check_for_win(game.clone());
 }
 
-fn reset_canvas() {
+fn clear_canvas() {
     let canvas: CanvasElement = document()
         .query_selector("#gameboard")
         .unwrap()
