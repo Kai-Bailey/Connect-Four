@@ -1,5 +1,5 @@
 [package]
-name = "connect-four-cli"
+name = "connect_four_cli"
 version = "0.1.0"
 authors = ["dinulade101 <dinulasd@gmail.com>"]
 edition = "2018"

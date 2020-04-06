@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate stdweb;
+extern crate connect_four_cli;
 
 mod connect_4_human;
 mod how_to_connect_4;
