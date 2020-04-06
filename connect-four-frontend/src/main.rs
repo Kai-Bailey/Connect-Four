@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate stdweb;
+extern crate connect_four_cli;
 
 mod connect_4_human;
 mod how_to_connect_4;
@@ -17,7 +18,7 @@ use crate::{
     how_to_toot::HowToTootModel, welcome::WelcomeModel,
 };
 use yew::virtual_dom::VNode;
-use yew_router::switch::{AllowMissing, Permissive};
+use yew_router::switch::{Permissive};
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;

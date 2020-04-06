@@ -170,7 +170,7 @@ fn start_connect_four() {
     }
 
     let handler: CliInterface = CliInterface{};
-    game.start_game(handler);
+    game.start_game_cli(handler);
 }
 
 fn start_toot_and_otto() {

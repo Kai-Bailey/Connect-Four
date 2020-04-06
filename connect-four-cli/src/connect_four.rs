@@ -14,23 +14,26 @@ pub trait GameEvents {
     fn game_over(&self, winner: String);
 }
 
-#[derive(PartialEq)]
-enum State {
+#[derive(Clone, PartialEq)]
+pub enum State {
     Done,
-    Running
+    Running,
+    NonStarted,
 }
 
+#[derive(Clone)]
 pub struct Game {
-    grid: Grid,
-    p1: String,
-    p2: String,
-    with_ai: bool,
-    state: State,
-    winner: String,
+    pub grid: Grid,
+    pub p1: String,
+    pub p2: String,
+    pub with_ai: bool,
+    pub state: State,
+    pub winner: String,
+    pub p_move: i64
 }
 
 impl Game {
-    pub(crate) fn new(row_size: usize, col_size: usize, with_ai: bool, p1_name: String, p2_name: String) -> Game {
+    pub fn new(row_size: usize, col_size: usize, with_ai: bool, p1_name: String, p2_name: String) -> Game {
         let grid = Grid::new(row_size, col_size);
         let mut game = Game{
             grid,
@@ -38,7 +41,8 @@ impl Game {
             p2: p2_name,
             with_ai: false,
             state: State::Running,
-            winner: "".to_string()
+            winner: "".to_string(),
+            p_move: 0
         };
         if with_ai {
             game.p2 = "Computer".to_string();
@@ -47,7 +51,11 @@ impl Game {
         game
     }
 
-    pub fn start_game<H: GameEvents>(&mut self, handler: H) {
+    pub fn start_game(&mut self) {
+        self.state = State::Running;
+    }
+
+    pub fn start_game_cli<H: GameEvents>(&mut self, handler: H) {
         handler.introduction();
         let mut p1_turn = true;
         let col_size = self.grid.rows[0].items.len();
@@ -57,57 +65,97 @@ impl Game {
 
             if !p1_turn && self.with_ai {
                 let col_num = self.ai_move(-1);
-                if self.grid.insert_chip(col_num, p1_turn).is_err() {
+                let grid_val = self.player_move_translate();
+                if self.grid.insert_chip(col_num, grid_val).is_err() {
                     continue;
                 }
+                self.p_move += 1;
                 handler.selected_column(self.p1.clone(), col_num);
                 p1_turn = !p1_turn;
-                continue;
             }
-
-            let sel_col = handler.player_turn(col_size);
-            if sel_col.is_ok() {
-                let col_num = sel_col.unwrap();
-                if self.grid.insert_chip(col_num, p1_turn).is_err() {
-                    handler.invalid_move();
+            else {
+                let sel_col = handler.player_turn(col_size);
+                if sel_col.is_ok() {
+                    let col_num = sel_col.unwrap();
+                    let grid_val = self.player_move_translate();
+                    let insert_result = self.grid.insert_chip(col_num, grid_val);
+                    if insert_result.is_err() {
+                        handler.invalid_move();
+                        continue;
+                    }
+                    self.p_move += 1;
+                    if p1_turn {
+                        handler.selected_column(self.p1.clone(), col_num);
+                    } else {
+                        handler.selected_column(self.p2.clone(), col_num);
+                    }
+                } else {
                     continue;
                 }
-                if p1_turn {
-                    handler.selected_column(self.p1.clone(), col_num);
-                }
-                else{
-                    handler.selected_column(self.p2.clone(), col_num);
-                }
-
-            }
-            else{
-                continue;
+                p1_turn = !p1_turn;
             }
             let result = self.check_win();
             if result.is_some() {
                 handler.show_grid(&self.grid);
                 let winner = result.unwrap();
-                match winner {
-                    1 => {
-                        self.winner = self.p1.clone();
-                        handler.game_over(self.winner.clone());
-                    }
-                    2 => {
-                        self.winner = self.p2.clone();
-                        handler.game_over(self.winner.clone());
-                    }
-                    _ => {
-                        println!("error");
-                    }
+                if winner >= 1 {
+                    self.winner = self.p1.clone();
+                    handler.game_over(self.winner.clone());
                 }
+                else if winner <= -1 {
+                    self.winner = self.p2.clone();
+                    handler.game_over(self.winner.clone());
+                }
+                else if winner == 0{
+                    self.winner = "Draw".to_string();
+                    println!("Draw");
+                }
+
                 self.state = State::Done;
                 self.post_game();
             }
-            p1_turn = !p1_turn;
+
         }
     }
     fn post_game(&self) {
 
+    }
+
+    fn player_move_translate(&self) -> i64{
+        if (self.p_move % 2) == 0 {
+            return 1;
+        }
+        return -1;
+    }
+
+    pub fn make_move(&mut self, col_num: usize) -> Result<(usize, usize), ()>{
+        let grid_val = self.player_move_translate();
+
+        let insert_result = self.grid.insert_chip(col_num, grid_val);
+        if insert_result.is_err() {
+            return Err(());
+        }
+
+        self.p_move += 1;
+
+        let result = self.check_win();
+        if result.is_some() {
+            let winner = result.unwrap();
+            if winner > 0{
+                self.winner = self.p1.clone();
+            }
+            else if winner < 0 {
+                self.winner = self.p2.clone();
+            }
+            else if winner == 0{
+                println!("error");
+                self.winner = "Draw".to_string();
+            }
+            self.state = State::Done;
+            self.post_game();
+        }
+
+        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize));
     }
 
     fn check_tile(&self, target: i64, r: i32, c: i32) -> bool{
@@ -123,40 +171,56 @@ impl Game {
         return false;
     }
 
-    fn check_win(&self) -> Option<i64>{
-        for c in 0..self.grid.rows.len() as i32 {
-            for r in 0..self.grid.rows[0].items.len() as i32 {
-                let target = self.grid.rows[c as usize].items[r as usize];
-                if target == 0 {
-                    // dont match against empty spaces
-                    continue;
-                }
+    fn check_win(&self) -> Option<i64> {
+        let mut temp_r = 0;
+        let mut temp_b = 0;
+        let mut temp_br = 0;
+        let mut temp_tr = 0;
+
+        for i in 0..self.grid.rows.len() {
+            for j in 0..self.grid.rows[0].items.len() {
+                temp_r = 0;
+                temp_b = 0;
+                temp_br = 0;
+                temp_tr = 0;
+
                 for k in 0..4 {
-                    if self.check_tile(target, r, c-1) && self.check_tile(target, r, c-2) &&
-                        self.check_tile(target, r, c-3) {
-                        return Some(target);
+                    if j + k < 7 {
+                        temp_r += self.grid.rows[i].items[j + k];
                     }
-                    if self.check_tile(target, r-1, c) && self.check_tile(target, r-2, c) &&
-                        self.check_tile(target, r-3, c) {
-                        return Some(target);
+                    //from (i,j) to bottom
+                    if i + k < 6 {
+                        temp_b += self.grid.rows[i + k].items[j];
                     }
-                    if self.check_tile(target, r-1, c-1) && self.check_tile(target, r-2, c-2) &&
-                        self.check_tile(target, r-3, c-3) {
-                        return Some(target);
+
+                    //from (i,j) to bottom-right
+                    if i + k < 6 && j + k < 7 {
+                        temp_br += self.grid.rows[i + k].items[j + k];
                     }
-                    if self.check_tile(target, r+1, c-1) && self.check_tile(target, r+2, c-2) &&
-                        self.check_tile(target, r+3, c-3) {
-                        return Some(target);
-                    }
-                    if self.check_tile(target, r+1, c+1) && self.check_tile(target, r+2, c+2) &&
-                        self.check_tile(target, r+3, c+3) {
-                        return Some(target);
-                    }
-                    if self.check_tile(target, r-1, c+1) && self.check_tile(target, r-2, c+2) &&
-                        self.check_tile(target, r-3, c+3) {
-                        return Some(target);
+
+                    //from (i,j) to top-right
+                    if i as i64 - k as i64 >= 0 && j + k < 7 {
+                        temp_tr += self.grid.rows[i - k].items[j + k];
                     }
                 }
+                if i64::abs(temp_r) == 4 {
+                    return Some(temp_r);
+                } else if i64::abs(temp_b) == 4 {
+                    return Some(temp_b);
+                } else if i64::abs(temp_br) == 4 {
+                    return Some(temp_br);
+                } else if i64::abs(temp_tr) == 4 {
+                    return Some(temp_tr);
+                }
+            }
+        }
+
+        if self.p_move == 42 {
+            match self.state {
+                State::Done => {
+                    return Some(0);
+                }
+                _ => {}
             }
         }
         return None;
@@ -354,11 +418,11 @@ impl Game {
 
 #[derive(Clone)]
 pub struct Grid {
-    rows: Vec<Row>
+    pub rows: Vec<Row>
 }
 
 impl Grid {
-    pub(crate) fn new(row_size: usize, col_size: usize) -> Grid {
+    pub fn new(row_size: usize, col_size: usize) -> Grid {
         let mut grid = Grid{ rows: vec![] };
         for _ in 0..row_size {
             let row = Row::new(col_size);
@@ -367,17 +431,12 @@ impl Grid {
         grid
     }
 
-    pub fn insert_chip(&mut self, col: usize, is_p1: bool) -> Result<(), ()> {
+    pub fn insert_chip(&mut self, col: usize, grid_val: i64) -> Result<(usize), ()> {
         for r in (0..self.rows.len()).rev() {
             match self.rows[r].items[col] {
                 0 => {
-                    if is_p1 {
-                        self.rows[r].items[col] = 1;
-                    }
-                    else{
-                        self.rows[r].items[col] = 2;
-                    }
-                    return Ok(());
+                    self.rows[r].items[col] = grid_val;
+                    return Ok((r));
                 }
                 _ => {}
             }
@@ -394,7 +453,7 @@ impl fmt::Display for Grid {
                 match *chip {
                     0 => write!(f, "_"),
                     1 => write!(f, "R"),
-                    2 => write!(f, "Y"),
+                    -1 => write!(f, "Y"),
                     _ => Err(std::fmt::Error)
                 };
                 write!(f, " ");
@@ -406,8 +465,8 @@ impl fmt::Display for Grid {
 }
 
 #[derive(Clone)]
-struct Row {
-    items: Vec<i64>
+pub struct Row {
+    pub items: Vec<i64>
 }
 
 impl Row {
