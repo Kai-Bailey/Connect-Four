@@ -5,6 +5,7 @@ extern crate stdweb;
 extern crate connect_four_cli;
 
 mod connect_4_human;
+mod connect_4_computer;
 mod how_to_connect_4;
 mod how_to_toot;
 mod scoreboard;
@@ -16,9 +17,9 @@ use yew::prelude::*;
 use yew_router::{prelude::*, Switch};
 
 use crate::{
-    connect_4_human::Connect4HumanModel, how_to_connect_4::HowToConnect4Model,
-    how_to_toot::HowToTootModel, scoreboard::ScoreBoardModel, scores::ScoresModel,
-    welcome::WelcomeModel,
+    connect_4_human::Connect4HumanModel, connect_4_computer::Connect4ComputerModel,
+    how_to_connect_4::HowToConnect4Model, how_to_toot::HowToTootModel,
+    scoreboard::ScoreBoardModel, scores::ScoresModel, welcome::WelcomeModel,
 };
 use yew::virtual_dom::VNode;
 use yew_router::switch::Permissive;
@@ -73,7 +74,8 @@ impl Component for Model {
                        <h3 class="w3-padding-64">{"Play Connect4 / TOOT-OTTO"}</h3>
                    </div>
                     <RouterAnchor<AppRoute> route=AppRoute::HowToConnect4> {"How to Connect 4"} </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Human> {"Connect 4 Human"} </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Computer> {"Player Connect4 With Computer"} </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Human> {"Player Connect4 With Another Human"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::HowToToot> {"How to Toot"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::ScoreBoard> {"View Game History"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::Scores> {"Scores"} </RouterAnchor<AppRoute>>
@@ -84,6 +86,7 @@ impl Component for Model {
                             match switch {
                                 AppRoute::Welcome => html!{<WelcomeModel />},
                                 AppRoute::HowToConnect4 => html!{<HowToConnect4Model />},
+                                AppRoute::Connect4Computer => html!{<Connect4ComputerModel />},
                                 AppRoute::Connect4Human => html!{<Connect4HumanModel />},
                                 AppRoute::HowToToot => html!{<HowToTootModel />},
                                 AppRoute::ScoreBoard => html!{<ScoreBoardModel />},
@@ -108,6 +111,8 @@ pub enum AppRoute {
     ScoreBoard,
     #[to = "/HowToConnect4"]
     HowToConnect4,
+    #[to = "/Connect4Computer"]
+    Connect4Computer,
     #[to = "/Connect4Human"]
     Connect4Human,
     #[to = "/HowToToot"]

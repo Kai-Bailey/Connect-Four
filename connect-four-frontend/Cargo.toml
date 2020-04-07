@@ -18,3 +18,4 @@ serde_derive = "1"
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 connect_four_cli = { path = "../connect-four-cli" }
+wasm-timer = "0.2.0"
