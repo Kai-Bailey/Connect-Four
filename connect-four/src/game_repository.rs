@@ -37,6 +37,27 @@ pub fn get_game_with_id_handler(id: ObjectId, conn: &Conn) -> Result<Option<Game
         }
 }
 
+
+pub fn get_wins_by_player(conn: &Conn) -> Result<Vec<bson::Document>, Error> {
+    match conn.collection("games").aggregate(
+        vec![
+            doc! {
+                "$group" => {
+                    "_id" => "$WinnerName",
+                    "count": { "$sum": 1 }
+                }
+            }
+        ],
+        None) {
+            Ok(doc) => {
+                Ok(doc.into_iter()
+                    .map(|doc| doc.unwrap())
+                    .collect::<Vec<_>>())
+            }
+            Err(err) => Err(err)
+        }
+}
+
 pub fn update_game_with_id_handler(id: bson::oid::ObjectId, game: Game, connection: &Conn) -> Result<Game, Error> {
     let mut game = game.clone();
     game.id = Some(id.clone());

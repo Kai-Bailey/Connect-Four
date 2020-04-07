@@ -11,9 +11,9 @@ mod mongo_connection;
 #[macro_use]
 extern crate rocket;
 
-use crate::game::Game;
+use crate::game::{Game};
 use crate::mongo_connection::Conn;
-use mongodb::{doc, error::Error, oid::ObjectId};
+use mongodb::{bson, doc, error::Error, oid::ObjectId};
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use rocket_contrib::serve::StaticFiles;
@@ -29,6 +29,14 @@ fn error_status(error: Error) -> Status {
 #[get("/")]
 pub fn get_all_games(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
     match game_repository::get_all_games_handler(&connection) {
+        Ok(res) => Ok(Json(res)),
+        Err(err) => Err(error_status(err)),
+    }
+}
+
+#[get("/")]
+fn get_player_wins(connection: Conn) -> Result<Json<Vec<bson::Document>>, Status> {
+    match game_repository::get_wins_by_player(&connection) {
         Ok(res) => Ok(Json(res)),
         Err(err) => Err(error_status(err)),
     }
@@ -132,6 +140,12 @@ fn main() {
                 update_game_with_id,
                 get_game_with_id,
                 games_id_delete
+            ],
+        )
+        .mount(
+            "/wins",
+            routes![
+                get_player_wins,
             ],
         )
         .mount("/users", routes![users])
