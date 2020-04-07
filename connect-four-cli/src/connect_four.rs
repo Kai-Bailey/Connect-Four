@@ -18,6 +18,7 @@ pub trait GameEvents {
 pub enum State {
     Done,
     Running,
+    Busy,
     NonStarted,
 }
 
@@ -64,7 +65,7 @@ impl Game {
             handler.player_turn_message(p1_turn);
 
             if !p1_turn && self.with_ai {
-                let col_num = self.ai_move(-1);
+                let col_num = self.ai_move_val(-1);
                 let grid_val = self.player_move_translate();
                 if self.grid.insert_chip(col_num, grid_val).is_err() {
                     continue;
@@ -121,7 +122,7 @@ impl Game {
 
     }
 
-    fn player_move_translate(&self) -> i64{
+    pub fn player_move_translate(&self) -> i64{
         if (self.p_move % 2) == 0 {
             return 1;
         }
@@ -215,7 +216,7 @@ impl Game {
             }
         }
 
-        if self.p_move == 42 {
+        if self.p_move == (self.grid.rows.len() * self.grid.rows[0].items.len()) as i64 {
             match self.state {
                 State::Done => {
                     return Some(0);
@@ -226,7 +227,42 @@ impl Game {
         return None;
     }
 
-    fn ai_move(&self, ai_move_val: i64) -> usize{
+    pub fn ai_make_move(&mut self) -> Result<(usize, usize, usize), ()>{
+        let mut col_num = self.ai_move_val(-1);
+        let grid_val = self.player_move_translate();
+
+        let mut insert_result = self.grid.insert_chip(col_num, grid_val);
+
+        // if fails generate random number between 0 and 6 inclusive
+        while insert_result.is_err() {
+            let mut rng = rand::thread_rng();
+            col_num = rng.gen_range(0, 7);
+            insert_result = self.grid.insert_chip(col_num, grid_val);
+        }
+
+        self.p_move += 1;
+
+        let result = self.check_win();
+        if result.is_some() {
+            let winner = result.unwrap();
+            if winner > 0{
+                self.winner = self.p1.clone();
+            }
+            else if winner < 0 {
+                self.winner = self.p2.clone();
+            }
+            else if winner == 0{
+                println!("error");
+                self.winner = "Draw".to_string();
+            }
+            self.state = State::Done;
+            self.post_game();
+        }
+
+        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num));
+    }
+
+    fn ai_move_val(&self, ai_move_val: i64) -> usize{
         let state = &self.grid.clone();
         let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
         let choice = choice_val.1;

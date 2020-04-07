@@ -1,6 +1,6 @@
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
-pub struct Connect4HumanModel {
+pub struct Connect4ComputerModel {
     link: ComponentLink<Self>,
     gameStarted: bool,
     player1Name: String,
@@ -139,7 +139,29 @@ fn animate(column: i64, move_val: i64, to_row: i64, cur_pos: i64, grid: Grid, ga
         });
     }
     else{
+        draw(&game.clone().borrow().grid);
         check_for_win(game.clone());
+        let_ai_move(game.clone());
+    }
+}
+
+fn let_ai_move(game:Rc<RefCell<Game>>) {
+    if game.borrow().state == State::Running && game.borrow().player_move_translate() == -1 {
+        game.borrow_mut().state = State::Busy;
+        // let the computer make move
+        let prev_grid = game.clone().borrow().grid.clone();
+        let insert_result = game.borrow_mut().ai_make_move();
+        if insert_result.is_ok() {
+            animate(insert_result.unwrap().2 as i64,
+                    insert_result.unwrap().1 as i64,
+                    insert_result.unwrap().0 as i64,
+                    0,
+                    prev_grid,
+                    game.clone());
+        }
+    }
+    else if game.borrow().state == State::Busy {
+        game.borrow_mut().state = State::Running;
     }
 }
 
@@ -150,7 +172,7 @@ fn check_for_win(game:Rc<RefCell<Game>>){
         State::Done => {
             // draw finished
             print_win(game.clone().borrow_mut().winner.clone());
-        }
+        },
         _ => {}
     }
 }
@@ -166,7 +188,7 @@ fn clear_canvas() {
     context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
 }
 
-impl Connect4HumanModel {
+impl Connect4ComputerModel {
     fn is_started(&self) -> bool{
         let state = self.game.clone().borrow().state.clone();
         return match state {
@@ -176,7 +198,7 @@ impl Connect4HumanModel {
     }
 }
 
-impl Component for Connect4HumanModel {
+impl Component for Connect4ComputerModel {
     type Message = Msg;
     type Properties = Props;
 
@@ -190,11 +212,11 @@ impl Component for Connect4HumanModel {
             winner: "".to_string(),
             p_move: 0
         }));
-        Connect4HumanModel {
+        Connect4ComputerModel {
             link,
             gameStarted: false,
             player1Name: "".to_string(),
-            player2Name: "".to_string(),
+            player2Name: "Computer".to_string(),
             game: game.clone(),
         }
     }
@@ -221,7 +243,7 @@ impl Component for Connect4HumanModel {
                         self.game.clone().borrow_mut().state = State::NonStarted;
                     },
                     State::Running => {
-                        if col.is_some() {
+                        if col.is_some() && self.game.clone().borrow().player_move_translate() == 1 {
                             let prev_grid = self.game.borrow().grid.clone();
                             let insert_result = self.game.borrow_mut().make_move(col.unwrap() as usize);
                             if insert_result.is_ok(){
@@ -232,8 +254,9 @@ impl Component for Connect4HumanModel {
                                         prev_grid,
                                         self.game.clone());
                             }
+                            check_for_win(self.game.clone());
                         }
-                    },
+                    }
                     _ => {}
                 }
                 check_for_win(self.game.clone());
@@ -287,7 +310,7 @@ impl Component for Connect4HumanModel {
     fn view(&self) -> VNode {
         let title;
         if self.is_started() {
-            title = "Human VS Human Connect 4";
+            title = "Human VS Computer Connect 4";
         } else {
             title = "Enter Player Names";
         }
@@ -310,7 +333,6 @@ impl Component for Connect4HumanModel {
                 html!{
                     <div class="col-md-offset-3 col-md-8">
                         <input id="textbox1" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
-                        <input id="textbox2" type="text" placeholder="Player 2's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer2Name(e.value))/>
                         <button onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
                     </div>
                   }
