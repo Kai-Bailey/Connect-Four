@@ -1,5 +1,5 @@
 use crate::mongo_connection::Conn;
-use crate::game::{Game, InsertableGame, PlayerToWins};
+use crate::game::{Game, InsertableGame};
 use mongodb::{bson, oid::ObjectId, coll::results::DeleteResult, doc, error::Error};
 use crate::r2d2_mongodb::mongodb::db::ThreadedDatabase;
 

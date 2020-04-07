@@ -11,7 +11,7 @@ mod mongo_connection;
 #[macro_use]
 extern crate rocket;
 
-use crate::game::{Game, PlayerToWins};
+use crate::game::{Game};
 use crate::mongo_connection::Conn;
 use mongodb::{bson, doc, error::Error, oid::ObjectId};
 use rocket::http::Status;
