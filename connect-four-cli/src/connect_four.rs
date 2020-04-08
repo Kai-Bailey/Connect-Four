@@ -441,16 +441,19 @@ impl Game {
 
 #[derive(Clone)]
 pub struct Grid {
-    pub items: Vec<i32>,
+    pub items: [i32; 80],
     num_rows: usize,
     num_cols: usize
 }
 
 impl Grid {
     pub fn new(row_size: usize, col_size: usize) -> Grid {
-        let mut grid = Grid{ items: vec![], num_rows: row_size, num_cols: col_size};
-        for _ in 0..(row_size*col_size) {
-            grid.items.push(0);
+        let mut grid = Grid{
+            items: [0; 80],
+            num_rows: row_size,
+            num_cols: col_size};
+        for x in 0..(row_size*col_size) {
+            grid.items[x] = 0;
         }
         grid
     }
