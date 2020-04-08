@@ -70,13 +70,15 @@ impl Component for Model {
         html! {
             <div>
                 <nav class="w3-sidenav w3-red w3-collapse w3-top w3-large w3-padding" style="z-index:3;width:350px;font-weight:bold" id="mySidenav">
-                   <div class="w3-container">
-                       <h3 class="w3-padding-64">{"Play Connect4 / TOOT-OTTO"}</h3>
-                   </div>
-                    <RouterAnchor<AppRoute> route=AppRoute::HowToConnect4> {"How to Connect 4"} </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Computer> {"Player Connect4 With Computer"} </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Human> {"Player Connect4 With Another Human"} </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> route=AppRoute::HowToToot> {"How to Toot"} </RouterAnchor<AppRoute>>
+                    <div class="w3-container">
+                        <h3 class="w3-padding-64">{"Play Connect4 / TOOT-OTTO"}</h3>
+                    </div>
+                    <RouterAnchor<AppRoute> route=AppRoute::HowToConnect4> {"How to Play Connect 4"} </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Computer> {"Play Connect4 With Computer"} </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> route=AppRoute::Connect4Human> {"Play Connect4 With Another Human"} </RouterAnchor<AppRoute>>
+                    <br />
+                    <RouterAnchor<AppRoute> route=AppRoute::HowToToot> {"How to Play TOOT-OTTO"} </RouterAnchor<AppRoute>>
+                    <br />
                     <RouterAnchor<AppRoute> route=AppRoute::ScoreBoard> {"View Game History"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::Scores> {"Scores"} </RouterAnchor<AppRoute>>
                     </nav>
