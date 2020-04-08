@@ -64,10 +64,10 @@ fn draw(grid: &Grid) {
     for y in 0..6 {
         for x in 0..7 {
             let mut fg_color = "transparent";
-            if grid.rows[y].items[x] >= 1 {
+            if grid.get(y, x) >= 1 {
                 fg_color = "#ff4136";
             }
-            else if grid.rows[y].items[x] <= -1 {
+            else if grid.get(y, x) <= -1 {
                 fg_color = "#ffff00";
             }
             draw_circle(75.0 * x as f64 + 100.0, 75.0 * y as f64 + 50.0, 25.0,
