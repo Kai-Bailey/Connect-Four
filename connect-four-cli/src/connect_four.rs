@@ -302,7 +302,7 @@ impl Game {
                         temp_tr += state.rows[i-k].items[j+k] as i64;
                     }
                 }
-                chain_val += temp_r * temp_r + temp_r;
+                chain_val += temp_r * temp_r * temp_r;
                 chain_val += temp_b * temp_b * temp_b;
                 chain_val += temp_br * temp_br * temp_br;
                 chain_val += temp_tr * temp_tr * temp_tr;
@@ -361,7 +361,7 @@ impl Game {
         let mut _move: i64 = -1;
         let mut temp_val: (i64, i64) = (0,0);
         let mut temp_state:Grid;
-        let mut move_queue: VecDeque<usize> = VecDeque::new();
+        let mut move_queue: Vec<usize> = Vec::new();
         let mut alpha = alpha;
 
         for j in 0..self.grid.rows[0].items.len() {
@@ -373,9 +373,9 @@ impl Game {
                     v = temp_val.0;
                     _move = j as i64;
                     move_queue.clear();
-                    move_queue.push_back(j);
+                    move_queue.push(j);
                 } else if temp_val.0 == v {
-                    move_queue.push_back(j);
+                    move_queue.push(j);
                 }
 
                 if v > beta {
@@ -390,7 +390,7 @@ impl Game {
         return (v, _move as i64);
     }
 
-    fn choose(choice: VecDeque<usize>) -> usize{
+    fn choose(choice: Vec<usize>) -> usize{
         let mut rng = rand::thread_rng();
         let rand_idx = rng.gen_range(0, choice.len());
         return choice[rand_idx as usize];
@@ -401,7 +401,7 @@ impl Game {
         let mut _move: i64 = -1;
         let mut temp_val: (i64, i64) = (0,0);
         let mut temp_state:Grid;
-        let mut move_queue: VecDeque<usize> = VecDeque::new();
+        let mut move_queue: Vec<usize> = Vec::new();
         let mut beta = beta;
 
         for j in 0..self.grid.rows[0].items.len() {
@@ -413,9 +413,9 @@ impl Game {
                     v = temp_val.0;
                     _move = j as i64;
                     move_queue.clear();
-                    move_queue.push_back(j);
+                    move_queue.push(j);
                 } else if temp_val.0 == v {
-                    move_queue.push_back(j);
+                    move_queue.push(j);
                 }
 
                 if v < alpha {
