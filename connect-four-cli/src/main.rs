@@ -1,9 +1,8 @@
 mod connect_four;
 
-use std::io;
+use crate::connect_four::{Game, GameEvents};
 use connect_four::Grid;
-use crate::connect_four::{GameEvents, Game};
-use std::io::Write;
+use std::io;
 
 fn main() {
     println!("Welcome to our game Command Line Interface.");
@@ -12,18 +11,17 @@ fn main() {
     println!("2) Toot and Otto");
 
     let sel = retrieve_user_input();
-    let mut is_connect_four = true;
+    let is_connect_four;
+
     match sel {
-        Ok(x) => {
-            match x.as_str() {
-                "1" => { is_connect_four = true },
-                "2" => { is_connect_four = false },
-                _ => {
-                    println!("Invalid input");
-                    return;
-                }
+        Ok(x) => match x.as_str() {
+            "1" => is_connect_four = true,
+            "2" => is_connect_four = false,
+            _ => {
+                println!("Invalid input");
+                return;
             }
-        }
+        },
         Err(_) => {
             println!("Invalid input");
             return;
@@ -32,8 +30,7 @@ fn main() {
 
     if is_connect_four {
         start_connect_four();
-    }
-    else {
+    } else {
         start_toot_and_otto();
     }
 }
@@ -49,25 +46,21 @@ fn retrieve_user_input() -> Result<String, ()> {
         }
         Err(_) => {
             println!("Error reading input!");
-            return Err(())
+            return Err(());
         }
     }
     if command_vector.len() == 0 {
         println!("Error: No selection made.");
-        return Err(())
-    }else{
-        return Ok(command_vector[0].to_string())
+        return Err(());
+    } else {
+        return Ok(command_vector[0].to_string());
     }
 }
 
-struct CliInterface {
-
-}
+struct CliInterface {}
 
 impl GameEvents for CliInterface {
-    fn introduction(&self) {
-
-    }
+    fn introduction(&self) {}
     fn show_grid(&self, grid: &Grid) {
         for i in 0..grid.num_cols {
             print!("{} ", i);
@@ -80,14 +73,13 @@ impl GameEvents for CliInterface {
     fn player_turn_message(&self, p1_turn: bool) {
         if p1_turn {
             println!("Player 1's turn");
-        }
-        else{
+        } else {
             println!("Player 2's turn");
         }
     }
 
     fn player_turn(&self, col_size: usize) -> Result<usize, ()> {
-        println!("Please select a column (0-{})", col_size-1);
+        println!("Please select a column (0-{})", col_size - 1);
         let col = retrieve_user_input();
         if col.is_ok() {
             return Ok(col.unwrap().parse().unwrap());
@@ -99,9 +91,7 @@ impl GameEvents for CliInterface {
         println!("{} Selected Column {}", player, col)
     }
 
-    fn animate_chip(&self) {
-
-    }
+    fn animate_chip(&self) {}
     fn invalid_move(&self) {
         println!("Column is full. Please try again with different column");
     }
@@ -122,25 +112,44 @@ fn start_connect_four() {
     println!("7) 8 x 8");
 
     let sel = retrieve_user_input();
-    let mut num_rows = 6;
-    let mut num_cols = 7;
+    let num_rows;
+    let num_cols;
     match sel {
-        Ok(x) => {
-            match x.as_str() {
-                "1" => { num_rows = 6; num_cols = 7; },
-                "2" => { num_rows = 5; num_cols = 4; },
-                "3" => { num_rows = 6; num_cols = 5; },
-                "4" => { num_rows = 8; num_cols = 7; },
-                "5" => { num_rows = 9; num_cols = 7; },
-                "6" => { num_rows = 10; num_cols = 7; },
-                "7" => { num_rows = 8; num_cols = 8; },
-
-                _ => {
-                    println!("Invalid input");
-                    return;
-                }
+        Ok(x) => match x.as_str() {
+            "1" => {
+                num_rows = 6;
+                num_cols = 7;
             }
-        }
+            "2" => {
+                num_rows = 5;
+                num_cols = 4;
+            }
+            "3" => {
+                num_rows = 6;
+                num_cols = 5;
+            }
+            "4" => {
+                num_rows = 8;
+                num_cols = 7;
+            }
+            "5" => {
+                num_rows = 9;
+                num_cols = 7;
+            }
+            "6" => {
+                num_rows = 10;
+                num_cols = 7;
+            }
+            "7" => {
+                num_rows = 8;
+                num_cols = 8;
+            }
+
+            _ => {
+                println!("Invalid input");
+                return;
+            }
+        },
         Err(_) => {
             println!("Invalid input");
             return;
@@ -150,34 +159,45 @@ fn start_connect_four() {
     println!("Do you want to play against an AI or another human?");
     println!("1) Human");
     println!("2) AI");
+
     let sel = retrieve_user_input();
-    let mut is_connect_four = true;
     let mut game;
+
     match sel {
-        Ok(x) => {
-            match x.as_str() {
-                "1" => {
-                    game = Game::new(num_rows, num_cols, false, "Bob".to_string(), "Jim".to_string());
-                },
-                "2" => {
-                    game = Game::new(num_rows, num_cols, true, "Bob".to_string(), "Jim".to_string());
-                },
-                _ => {
-                    println!("Invalid input");
-                    return;
-                }
+        Ok(x) => match x.as_str() {
+            "1" => {
+                game = Game::new(
+                    num_rows,
+                    num_cols,
+                    false,
+                    "Bob".to_string(),
+                    "Jim".to_string(),
+                );
             }
-        }
+            "2" => {
+                game = Game::new(
+                    num_rows,
+                    num_cols,
+                    true,
+                    "Bob".to_string(),
+                    "Jim".to_string(),
+                );
+            }
+            _ => {
+                println!("Invalid input");
+                return;
+            }
+        },
         Err(_) => {
             println!("Invalid input");
             return;
         }
     }
 
-    let handler: CliInterface = CliInterface{};
+    let handler: CliInterface = CliInterface {};
     game.start_game_cli(handler);
 }
 
 fn start_toot_and_otto() {
-
+    // TODO
 }
