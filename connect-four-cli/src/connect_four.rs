@@ -73,7 +73,6 @@ impl Game {
         while self.state == State::Running {
             handler.show_grid(&self.grid);
             handler.player_turn_message(p1_turn);
-
             if !p1_turn && self.with_ai {
                 let col_num = self.ai_move_val(-1);
                 let grid_val = self.player_move_translate();
@@ -118,7 +117,6 @@ impl Game {
                     self.winner = "Draw".to_string();
                     println!("Draw");
                 }
-
                 self.state = State::Done;
                 self.post_game();
             }
@@ -178,21 +176,22 @@ impl Game {
                     if j + k < 7 {
                         temp_r += self.grid.get(i, j + k) as i64;
                     }
-                    //from (i,j) to bottom
+                    // From (i,j) to bottom
                     if i + k < 6 {
                         temp_b += self.grid.get(i + k, j) as i64;
                     }
 
-                    //from (i,j) to bottom-right
+                    // From (i,j) to bottom-right
                     if i + k < 6 && j + k < 7 {
                         temp_br += self.grid.get(i + k, j + k) as i64;
                     }
 
-                    //from (i,j) to top-right
+                    // From (i,j) to top-right
                     if i as i64 - k as i64 >= 0 && j + k < 7 {
                         temp_tr += self.grid.get(i - k, j + k) as i64;
                     }
                 }
+
                 if i64::abs(temp_r) == 4 {
                     return Some(temp_r);
                 } else if i64::abs(temp_b) == 4 {
@@ -205,6 +204,7 @@ impl Game {
             }
         }
 
+        // Draw
         if self.p_move == (self.grid.num_rows * self.grid.num_cols) as i64 {
             match self.state {
                 State::Done => {}
@@ -289,6 +289,7 @@ impl Game {
                         temp_tr += state.get(i - k, j + k) as i64;
                     }
                 }
+
                 chain_val += temp_r * temp_r * temp_r;
                 chain_val += temp_b * temp_b * temp_b;
                 chain_val += temp_br * temp_br * temp_br;
@@ -305,6 +306,7 @@ impl Game {
                 }
             }
         }
+
         return (win_val, chain_val);
     }
 
@@ -332,6 +334,7 @@ impl Game {
 
             return (ret_value, -1);
         }
+
         let win = val.0;
         if win == 4 * ai_move_val {
             return ((999999 - depth * depth) as i64, -1);
@@ -366,6 +369,7 @@ impl Game {
             if temp_state_opt.is_some() {
                 temp_state = temp_state_opt.unwrap();
                 temp_val = self.ai_value(&temp_state, depth, alpha, beta, ai_move_val);
+
                 if temp_val.0 > v {
                     v = temp_val.0;
                     _move = j as i64;
@@ -417,6 +421,7 @@ impl Game {
             if temp_state_opt.is_some() {
                 temp_state = temp_state_opt.unwrap();
                 temp_val = self.ai_value(&temp_state, depth, alpha, beta, ai_move_val);
+
                 if temp_val.0 < v {
                     v = temp_val.0;
                     _move = j as i64;
