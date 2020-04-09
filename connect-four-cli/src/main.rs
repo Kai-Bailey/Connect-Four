@@ -61,6 +61,7 @@ struct CliInterface {}
 
 impl GameEvents for CliInterface {
     fn introduction(&self) {}
+
     fn show_grid(&self, grid: &Grid) {
         for i in 0..grid.num_cols {
             print!("{} ", i);
@@ -92,9 +93,11 @@ impl GameEvents for CliInterface {
     }
 
     fn animate_chip(&self) {}
+
     fn invalid_move(&self) {
         println!("Column is full. Please try again with different column");
     }
+
     fn game_over(&self, winner: String) {
         println!("{} has won! Congratulations!", winner);
     }

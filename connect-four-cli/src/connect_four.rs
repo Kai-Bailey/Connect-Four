@@ -122,6 +122,7 @@ impl Game {
             }
         }
     }
+
     fn post_game(&self) {}
 
     pub fn player_move_translate(&self) -> i32 {
