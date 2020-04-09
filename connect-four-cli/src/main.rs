@@ -69,6 +69,11 @@ impl GameEvents for CliInterface {
 
     }
     fn show_grid(&self, grid: &Grid) {
+        for i in 0..grid.num_cols {
+            print!("{} ", i);
+        }
+        println!("");
+
         println!("{}", grid);
     }
 

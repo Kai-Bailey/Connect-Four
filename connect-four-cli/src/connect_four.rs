@@ -149,7 +149,6 @@ impl Game {
                 self.winner = self.p2.clone();
             }
             else if winner == 0{
-                println!("error");
                 self.winner = "Draw".to_string();
             }
             self.state = State::Done;
@@ -205,12 +204,13 @@ impl Game {
 
         if self.p_move == (self.grid.num_rows * self.grid.num_cols) as i64 {
             match self.state {
-                State::Done => {
+                State::Done => { }
+                _ => {
                     return Some(0);
                 }
-                _ => {}
             }
         }
+
         return None;
     }
 
@@ -223,7 +223,7 @@ impl Game {
         // if fails generate random number between 0 and 6 inclusive
         while insert_result.is_err() {
             let mut rng = rand::thread_rng();
-            col_num = rng.gen_range(0, 7);
+            col_num = rng.gen_range(0, self.grid.num_cols);
             insert_result = self.grid.insert_chip(col_num, grid_val);
         }
 
@@ -239,7 +239,6 @@ impl Game {
                 self.winner = self.p2.clone();
             }
             else if winner == 0{
-                println!("error");
                 self.winner = "Draw".to_string();
             }
             self.state = State::Done;
@@ -372,9 +371,13 @@ impl Game {
                 alpha = max(alpha, v);
             }
         }
-        _move = Game::choose(move_queue) as i64;
 
-        return (v, _move as i64);
+        if move_queue.len() == 0 {
+            (v, -1)
+        } else {
+            _move = Game::choose(move_queue) as i64;
+            (v, _move as i64)
+        }
     }
 
     fn choose(choice: Vec<usize>) -> usize{
@@ -412,9 +415,13 @@ impl Game {
                 beta = min(beta, v);
             }
         }
-        _move = Game::choose(move_queue) as i64;
 
-        return (v, _move as i64);
+        if move_queue.len() == 0 {
+                (v, -1)
+        } else {
+            _move = Game::choose(move_queue) as i64;
+            return (v, _move as i64);
+        }
     }
 
     fn ai_fill_map(&self, state: &Grid, column: usize, value: i64) -> Option<Grid>{
@@ -442,8 +449,8 @@ impl Game {
 #[derive(Clone)]
 pub struct Grid {
     pub items: [i32; 80],
-    num_rows: usize,
-    num_cols: usize
+    pub num_rows: usize,
+    pub num_cols: usize
 }
 
 impl Grid {
@@ -483,11 +490,17 @@ impl fmt::Display for Grid {
         for r in 0..self.num_rows {
             for c in 0..self.num_cols {
                 let chip = self.get(r, c);
-                match chip {
+                let result = match chip {
                     0 => write!(f, "_"),
                     1 => write!(f, "R"),
                     -1 => write!(f, "Y"),
                     _ => Err(std::fmt::Error)
+                };
+                match result {
+                    Ok(_) => {},
+                    Err(e) => {
+                        return Err(e);
+                    }
                 };
                 write!(f, " ");
             }
@@ -503,6 +516,7 @@ pub struct Row {
 }
 
 impl Row {
+    #[allow(dead_code)] // Used by web
     fn new(size: usize) -> Row {
         let mut row = Row{ items: vec![] };
         row.items = Vec::new();
