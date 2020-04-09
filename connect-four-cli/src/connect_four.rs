@@ -59,7 +59,7 @@ impl Game {
     pub fn start_game_cli<H: GameEvents>(&mut self, handler: H) {
         handler.introduction();
         let mut p1_turn = true;
-        let col_size = self.grid.rows[0].items.len();
+        let col_size = self.grid.num_cols;
         while self.state == State::Running {
             handler.show_grid(&self.grid);
             handler.player_turn_message(p1_turn);
@@ -122,7 +122,7 @@ impl Game {
 
     }
 
-    pub fn player_move_translate(&self) -> i64{
+    pub fn player_move_translate(&self) -> i32{
         if (self.p_move % 2) == 0 {
             return 1;
         }
@@ -159,27 +159,14 @@ impl Game {
         return Ok((insert_result.unwrap(), (self.p_move - 1) as usize));
     }
 
-    fn check_tile(&self, target: i64, r: i32, c: i32) -> bool{
-        if !(r >=0 && r < self.grid.rows[0].items.len() as i32) {
-            return false;
-        }
-        if !(c >= 0 && c < self.grid.rows.len() as i32) {
-            return false;
-        }
-        if target == self.grid.rows[c as usize].items[r as usize] {
-            return true;
-        }
-        return false;
-    }
-
     fn check_win(&self) -> Option<i64> {
-        let mut temp_r = 0;
-        let mut temp_b = 0;
-        let mut temp_br = 0;
-        let mut temp_tr = 0;
+        let mut temp_r: i64 = 0;
+        let mut temp_b: i64 = 0;
+        let mut temp_br: i64 = 0;
+        let mut temp_tr: i64 = 0;
 
-        for i in 0..self.grid.rows.len() {
-            for j in 0..self.grid.rows[0].items.len() {
+        for i in 0..self.grid.num_rows {
+            for j in 0..self.grid.num_cols {
                 temp_r = 0;
                 temp_b = 0;
                 temp_br = 0;
@@ -187,21 +174,21 @@ impl Game {
 
                 for k in 0..4 {
                     if j + k < 7 {
-                        temp_r += self.grid.rows[i].items[j + k];
+                        temp_r += self.grid.get(i, j + k) as i64;
                     }
                     //from (i,j) to bottom
                     if i + k < 6 {
-                        temp_b += self.grid.rows[i + k].items[j];
+                        temp_b += self.grid.get(i + k, j) as i64;
                     }
 
                     //from (i,j) to bottom-right
                     if i + k < 6 && j + k < 7 {
-                        temp_br += self.grid.rows[i + k].items[j + k];
+                        temp_br += self.grid.get(i + k, j + k) as i64;
                     }
 
                     //from (i,j) to top-right
                     if i as i64 - k as i64 >= 0 && j + k < 7 {
-                        temp_tr += self.grid.rows[i - k].items[j + k];
+                        temp_tr += self.grid.get(i - k, j + k) as i64;
                     }
                 }
                 if i64::abs(temp_r) == 4 {
@@ -216,7 +203,7 @@ impl Game {
             }
         }
 
-        if self.p_move == (self.grid.rows.len() * self.grid.rows[0].items.len()) as i64 {
+        if self.p_move == (self.grid.num_rows * self.grid.num_cols) as i64 {
             match self.state {
                 State::Done => {
                     return Some(0);
@@ -278,8 +265,8 @@ impl Game {
         let mut temp_br: i64 = 0;
         let mut temp_tr: i64 = 0;
 
-        let num_rows = state.rows.len();
-        let num_cols = state.rows[0].items.len();
+        let num_rows = state.num_rows;
+        let num_cols = state.num_cols;
 
         for i in 0..num_rows {
             for j in 0..num_cols {
@@ -290,16 +277,16 @@ impl Game {
 
                 for k in 0..4 {
                     if j + k < num_cols {
-                        temp_r += state.rows[i].items[j+k] as i64;
+                        temp_r += state.get(i, j+k) as i64;
                     }
                     if i + k < num_rows {
-                        temp_b += state.rows[i+k].items[j] as i64;
+                        temp_b += state.get(i+k,j) as i64;
                     }
                     if i + k < num_rows && j + k < num_cols {
-                        temp_br += state.rows[i+k].items[j+k] as i64;
+                        temp_br += state.get(i+k, j+k) as i64;
                     }
                     if i as i64 - k as i64 >= 0 && j + k < num_cols {
-                        temp_tr += state.rows[i-k].items[j+k] as i64;
+                        temp_tr += state.get(i-k, j+k) as i64;
                     }
                 }
                 chain_val += temp_r * temp_r * temp_r;
@@ -364,7 +351,7 @@ impl Game {
         let mut move_queue: Vec<usize> = Vec::new();
         let mut alpha = alpha;
 
-        for j in 0..self.grid.rows[0].items.len() {
+        for j in 0..self.grid.num_cols {
             let temp_state_opt = self.ai_fill_map(state, j, ai_move_val);
             if temp_state_opt.is_some() {
                 temp_state = temp_state_opt.unwrap();
@@ -404,7 +391,7 @@ impl Game {
         let mut move_queue: Vec<usize> = Vec::new();
         let mut beta = beta;
 
-        for j in 0..self.grid.rows[0].items.len() {
+        for j in 0..self.grid.num_cols {
             let temp_state_opt = self.ai_fill_map(state, j, ai_move_val * -1);
             if temp_state_opt.is_some() {
                 temp_state = temp_state_opt.unwrap();
@@ -432,13 +419,13 @@ impl Game {
 
     fn ai_fill_map(&self, state: &Grid, column: usize, value: i64) -> Option<Grid>{
         let mut temp_map = state.clone();
-        if temp_map.rows[0].items[column] != 0 || column < 0 || column >= state.rows[0].items.len() {
+        if temp_map.get(0, column) != 0 || column < 0 || column >= self.grid.num_cols {
             return None;
         }
         let mut done = false;
         let mut row = 0;
-        for i in 0..self.grid.rows.len()-1 {
-            if temp_map.rows[i+1].items[column] != 0 {
+        for i in 0..self.grid.num_rows-1 {
+            if temp_map.get(i+1, column) != 0 {
                 done = true;
                 row = i;
                 break;
@@ -447,31 +434,35 @@ impl Game {
         if !done {
             row = 5;
         }
-        temp_map.rows[row].items[column] = value;
+        temp_map.set(row, column, value as i32);
         return Some(temp_map);
     }
 }
 
 #[derive(Clone)]
 pub struct Grid {
-    pub rows: Vec<Row>
+    pub items: [i32; 80],
+    num_rows: usize,
+    num_cols: usize
 }
 
 impl Grid {
     pub fn new(row_size: usize, col_size: usize) -> Grid {
-        let mut grid = Grid{ rows: vec![] };
-        for _ in 0..row_size {
-            let row = Row::new(col_size);
-            grid.rows.push(row);
+        let mut grid = Grid{
+            items: [0; 80],
+            num_rows: row_size,
+            num_cols: col_size};
+        for x in 0..(row_size*col_size) {
+            grid.items[x] = 0;
         }
         grid
     }
 
-    pub fn insert_chip(&mut self, col: usize, grid_val: i64) -> Result<(usize), ()> {
-        for r in (0..self.rows.len()).rev() {
-            match self.rows[r].items[col] {
+    pub fn insert_chip(&mut self, col: usize, grid_val: i32) -> Result<(usize), ()> {
+        for r in (0..self.num_rows).rev() {
+            match self.get(r, col) {
                 0 => {
-                    self.rows[r].items[col] = grid_val;
+                    self.set(r, col, grid_val as i32);
                     return Ok((r));
                 }
                 _ => {}
@@ -479,14 +470,20 @@ impl Grid {
         }
         return Err(());
     }
+    pub fn get(&self, row: usize, col: usize) -> i32{
+        self.items[col*self.num_rows + (self.num_rows-1 - row)]
+    }
+    pub fn set(&mut self, row: usize, col: usize, val: i32) {
+        self.items[col*self.num_rows + (self.num_rows-1 - row)] = val;
+    }
 }
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for r in 0..self.rows.len() {
-            for c in 0..self.rows[0].items.len() {
-                let chip = &self.rows[r].items[c];
-                match *chip {
+        for r in 0..self.num_rows {
+            for c in 0..self.num_cols {
+                let chip = self.get(r, c);
+                match chip {
                     0 => write!(f, "_"),
                     1 => write!(f, "R"),
                     -1 => write!(f, "Y"),
