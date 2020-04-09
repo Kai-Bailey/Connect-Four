@@ -463,7 +463,7 @@ impl Game {
             }
         }
         if !done {
-            row = 5;
+            row = self.grid.num_rows - 1;
         }
         temp_map.set(row, column, value as i32);
         return Some(temp_map);
