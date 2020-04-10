@@ -1,7 +1,8 @@
 mod connect_four;
+mod toot_otto;
 
-use crate::connect_four::{Game, GameEvents};
-use connect_four::Grid;
+use crate::connect_four::{Game as ConnectFourGame, GameEvents as ConnectFourGameEvents, Grid as ConnectFourGrid};
+use crate::toot_otto::{Game as TootOttoGame, GameEvents as TootOttoGameEvents, ChipType as TootOttoChipType, Grid as TootOttoGrid};
 use std::io;
 
 fn main() {
@@ -57,12 +58,12 @@ fn retrieve_user_input() -> Result<String, ()> {
     }
 }
 
-struct CliInterface {}
+struct ConnectFourCliInterface {}
 
-impl GameEvents for CliInterface {
+impl ConnectFourGameEvents for ConnectFourCliInterface {
     fn introduction(&self) {}
 
-    fn show_grid(&self, grid: &Grid) {
+    fn show_grid(&self, grid: &ConnectFourGrid) {
         for i in 0..grid.num_cols {
             print!("{} ", i);
         }
@@ -83,6 +84,62 @@ impl GameEvents for CliInterface {
         println!("Please select a column (0-{})", col_size - 1);
         let col = retrieve_user_input();
         if col.is_ok() {
+            return Ok(col.unwrap().parse().unwrap());
+        }
+        return Err(());
+    }
+
+    fn selected_column(&self, player: String, col: usize) {
+        println!("{} Selected Column {}", player, col)
+    }
+
+    fn animate_chip(&self) {}
+
+    fn invalid_move(&self) {
+        println!("Column is full. Please try again with different column");
+    }
+
+    fn game_over(&self, winner: String) {
+        println!("{} has won! Congratulations!", winner);
+    }
+}
+
+struct TootOttoCliInterface {}
+
+impl TootOttoGameEvents for TootOttoCliInterface {
+    fn introduction(&self) {}
+
+    fn show_grid(&self, grid: &TootOttoGrid) {
+        for i in 0..grid.num_cols {
+            print!("{} ", i);
+        }
+        println!("");
+
+        println!("{}", grid);
+    }
+
+    fn player_turn_message(&self, p1_turn: bool) {
+        if p1_turn {
+            println!("Player 1's turn");
+        } else {
+            println!("Player 2's turn");
+        }
+    }
+
+    fn player_turn(&self, col_size: usize) -> Result<(TootOttoChipType, usize), ()> {
+        println!("Please select a column (0-{})", col_size - 1);
+        let col = retrieve_user_input();
+        if col.is_ok() {
+            let input = col.unwrap().chars();
+            let chip = input.next().unwrap();
+
+            let chip_type;
+            if chip == 'T' {
+                chip_type = TootOttoChipType::T;
+            } else {
+                chip_type = TootOttoChipType::O;
+            }
+
             return Ok(col.unwrap().parse().unwrap());
         }
         return Err(());
@@ -169,21 +226,21 @@ fn start_connect_four() {
     match sel {
         Ok(x) => match x.as_str() {
             "1" => {
-                game = Game::new(
+                game = ConnectFourGame::new(
                     num_rows,
                     num_cols,
                     false,
-                    "Bob".to_string(),
-                    "Jim".to_string(),
+                    "P1".to_string(),
+                    "P2".to_string(),
                 );
             }
             "2" => {
-                game = Game::new(
+                game = ConnectFourGame::new(
                     num_rows,
                     num_cols,
                     true,
-                    "Bob".to_string(),
-                    "Jim".to_string(),
+                    "Player".to_string(),
+                    "Computer".to_string(),
                 );
             }
             _ => {
