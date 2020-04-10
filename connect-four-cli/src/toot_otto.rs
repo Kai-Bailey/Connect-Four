@@ -10,10 +10,10 @@ pub enum ChipType {
 
 pub trait GameEvents {
     fn introduction(&self);
-    fn show_grid(&self, grid: &Grid);
+    fn show_grid(&self, grid: &DummyGrid);
     fn player_turn_message(&self, p1_turn: bool);
     fn player_turn(&self, col_size: usize) -> Result<(ChipType, usize), ()>;
-    fn selected_column(&self, player: String, type: ChipType, col: usize);
+    fn selected_column(&self, player: String, chip_type: ChipType, col: usize);
     fn animate_chip(&self);
     fn invalid_move(&self);
     fn game_over(&self, winner: String);
@@ -34,6 +34,7 @@ pub enum State {
 #[derive(Clone)]
 pub struct Game {
     pub grid: Grid,
+    pub dummy_grid: DummyGrid,
     pub p1: String,
     pub p2: String,
     pub with_ai: bool,
@@ -51,8 +52,10 @@ impl Game {
         p2_name: String,
     ) -> Game {
         let grid = Grid::new(row_size, col_size);
+        let dummy_grid = DummyGrid::new(row_size, col_size);
         let mut game = Game {
             grid,
+            dummy_grid,
             p1: p1_name,
             p2: p2_name,
             with_ai: false,
@@ -77,14 +80,14 @@ impl Game {
         let mut p1_turn = true;
         let col_size = self.grid.num_cols;
         while self.state == State::Running {
-            handler.show_grid(&self.grid);
+            handler.show_grid(&self.dummy_grid);
             handler.player_turn_message(p1_turn);
             if !p1_turn && self.with_ai {
                 let (chip_type, col_num) = self.ai_move_val(-1);
-                let grid_val = self.player_move_translate();
-                if self.grid.insert_chip(chip_type, col_num, grid_val).is_err() {
+                if self.grid.insert_chip(col_num, self.player_move_translate()).is_err() {
                     continue;
                 }
+                self.dummy_grid.insert_chip(col_num, self.player_move_dummy_translate(chip_type)).unwrap();
                 self.p_move += 1;
                 handler.selected_column(self.p1.clone(), chip_type, col_num);
                 p1_turn = !p1_turn;
@@ -93,11 +96,12 @@ impl Game {
                 if sel_col.is_ok() {
                     let (chip_type, col_num) = sel_col.unwrap();
                     let grid_val = self.player_move_translate();
-                    let insert_result = self.grid.insert_chip(chip_type, col_num, grid_val);
+                    let insert_result = self.grid.insert_chip(col_num, grid_val);
                     if insert_result.is_err() {
                         handler.invalid_move();
                         continue;
                     }
+                    self.dummy_grid.insert_chip(col_num, self.player_move_dummy_translate(chip_type)).unwrap();
                     self.p_move += 1;
                     if p1_turn {
                         handler.selected_column(self.p1.clone(), chip_type, col_num);
@@ -111,7 +115,7 @@ impl Game {
             }
             let result = self.check_win();
             if result.is_some() {
-                handler.show_grid(&self.grid);
+                handler.show_grid(&self.dummy_grid);
                 let winner = result.unwrap();
                 if winner >= 1 {
                     self.winner = self.p1.clone();
@@ -138,9 +142,16 @@ impl Game {
         return -1;
     }
 
+    pub fn player_move_dummy_translate(self, chip_type: ChipType) -> i32 {
+        match chip_type {
+            ChipType::T => 1,
+            ChipType::O => -1,
+        }
+    }
+
     #[allow(dead_code)] // Used by web
-    pub fn make_move(&mut self, col_num: usize) -> Result<(usize, usize), ()> {
-        panic!("TODO: Not implemented");
+    pub fn make_move(&mut self, chip_type: ChipType, col_num: usize) -> Result<(usize, usize), ()> {
+        panic!("TODO");
 
         let grid_val = self.player_move_translate();
 
@@ -148,6 +159,7 @@ impl Game {
         if insert_result.is_err() {
             return Err(());
         }
+        self.dummy_grid.insert_chip(col_num, self.player_move_dummy_translate(chip_type)).unwrap();
 
         self.p_move += 1;
 
@@ -169,21 +181,22 @@ impl Game {
     }
 
     fn check_win(&self) -> Option<i64> {
-        let mut temp_r: i64;
-        let mut temp_b: i64;
-        let mut temp_br: i64;
-        let mut temp_tr: i64;
+        let mut temp_r1: [i32; 4];
+        let mut temp_b1: [i32; 4];
+        let mut temp_br1: [i32; 4];
+        let mut temp_br2: [i32; 4];
 
-        for i in 0..self.grid.num_rows {
-            for j in 0..self.grid.num_cols {
-                temp_r = 0;
-                temp_b = 0;
-                temp_br = 0;
-                temp_tr = 0;
+        for i in 0..self.dummy_grid.num_rows {
+            for j in 0..self.dummy_grid.num_cols {
+                temp_r1[0] = 0; temp_r1[1] = 0; temp_r1[2] = 0; temp_r1[3] = 0;
+                temp_b1[0] = 0; temp_b1[1] = 0; temp_b1[2] = 0; temp_b1[3] = 0;
+                temp_br1[0] = 0; temp_br1[1] = 0; temp_br1[2] = 0; temp_br1[3] = 0;
+                temp_br2[0] = 0; temp_br2[1] = 0; temp_br2[2] = 0; temp_br2[3] = 0;
 
                 for k in 0..4 {
+                    // From (i,j) to right
                     if j + k < 7 {
-                        temp_r += self.grid.get(i, j + k) as i64;
+                        temp_r1[k] = self.dummy_grid.get(i, j + k);
                     }
                     // From (i,j) to bottom
                     if i + k < 6 {
@@ -259,7 +272,7 @@ impl Game {
         return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num));
     }
 
-    fn ai_move_val(&self, ai_move_val: i64) -> usize {
+    fn ai_move_val(&self, ai_move_val: i64) -> (ChipType, usize) {
         let state = &self.grid.clone();
         let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
         let choice = choice_val.1;
@@ -486,7 +499,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(row_size: usize, col_size: usize) -> Grid {
+    pub fn new(row_size: usize, col_size: usize) -> Self {
         let mut grid = Grid {
             items: [0; 80],
             num_rows: row_size,
@@ -538,12 +551,73 @@ impl fmt::Display for Grid {
 }
 
 #[derive(Clone)]
+pub struct DummyGrid {
+    pub items: [i32; 80],
+    pub num_rows: usize,
+    pub num_cols: usize,
+}
+
+impl DummyGrid {
+    pub fn new(row_size: usize, col_size: usize) -> Self {
+        let mut grid = DummyGrid {
+            items: [0; 80],
+            num_rows: row_size,
+            num_cols: col_size,
+        };
+        for x in 0..(row_size * col_size) {
+            grid.items[x] = 0;
+        }
+        grid
+    }
+
+    pub fn insert_chip(&mut self, col: usize, grid_val: i32) -> Result<usize, ()> {
+        for r in (0..self.num_rows).rev() {
+            match self.get(r, col) {
+                0 => {
+                    self.set(r, col, grid_val as i32);
+                    return Ok(r);
+                }
+                _ => {}
+            }
+        }
+        return Err(());
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> i32 {
+        self.items[col * self.num_rows + (self.num_rows - 1 - row)]
+    }
+
+    pub fn set(&mut self, row: usize, col: usize, val: i32) {
+        self.items[col * self.num_rows + (self.num_rows - 1 - row)] = val;
+    }
+}
+
+impl fmt::Display for DummyGrid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for r in 0..self.num_rows {
+            for c in 0..self.num_cols {
+                let chip = self.get(r, c);
+                match chip {
+                    0 => write!(f, "_"),
+                    1 => write!(f, "T"),
+                    -1 => write!(f, "O"),
+                    _ => Err(std::fmt::Error),
+                }?;
+                write!(f, " ")?;
+            }
+            write!(f, "\n")?;
+        }
+        Ok(())
+    }
+}
+
+// TODO: Is this still used?
+#[derive(Clone)]
 pub struct Row {
     pub items: Vec<i64>,
 }
 
 impl Row {
-    #[allow(dead_code)] // Used by web
     fn new(size: usize) -> Row {
         let mut row = Row { items: vec![] };
         row.items = Vec::new();

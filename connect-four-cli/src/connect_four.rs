@@ -174,6 +174,7 @@ impl Game {
                 temp_tr = 0;
 
                 for k in 0..4 {
+                    // From (i,j) to right
                     if j + k < 7 {
                         temp_r += self.grid.get(i, j + k) as i64;
                     }
@@ -478,7 +479,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(row_size: usize, col_size: usize) -> Grid {
+    pub fn new(row_size: usize, col_size: usize) -> Self {
         let mut grid = Grid {
             items: [0; 80],
             num_rows: row_size,
@@ -502,9 +503,11 @@ impl Grid {
         }
         return Err(());
     }
+
     pub fn get(&self, row: usize, col: usize) -> i32 {
         self.items[col * self.num_rows + (self.num_rows - 1 - row)]
     }
+
     pub fn set(&mut self, row: usize, col: usize, val: i32) {
         self.items[col * self.num_rows + (self.num_rows - 1 - row)] = val;
     }
@@ -529,13 +532,13 @@ impl fmt::Display for Grid {
     }
 }
 
+// TODO: Is this still used?
 #[derive(Clone)]
 pub struct Row {
     pub items: Vec<i64>,
 }
 
 impl Row {
-    #[allow(dead_code)] // Used by web
     fn new(size: usize) -> Row {
         let mut row = Row { items: vec![] };
         row.items = Vec::new();

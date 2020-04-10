@@ -2,7 +2,7 @@ mod connect_four;
 mod toot_otto;
 
 use crate::connect_four::{Game as ConnectFourGame, GameEvents as ConnectFourGameEvents, Grid as ConnectFourGrid};
-use crate::toot_otto::{Game as TootOttoGame, GameEvents as TootOttoGameEvents, ChipType as TootOttoChipType, Grid as TootOttoGrid};
+use crate::toot_otto::{Game as TootOttoGame, GameEvents as TootOttoGameEvents, ChipType as TootOttoChipType, DummyGrid as TootOttoGrid};
 use std::io;
 
 fn main() {
