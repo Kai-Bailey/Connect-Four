@@ -1,8 +1,13 @@
 mod connect_four;
 mod toot_otto;
 
-use crate::connect_four::{Game as ConnectFourGame, GameEvents as ConnectFourGameEvents, Grid as ConnectFourGrid};
-use crate::toot_otto::{Game as TootOttoGame, GameEvents as TootOttoGameEvents, ChipType as TootOttoChipType, DummyGrid as TootOttoGrid};
+use crate::connect_four::{
+    Game as ConnectFourGame, GameEvents as ConnectFourGameEvents, Grid as ConnectFourGrid,
+};
+use crate::toot_otto::{
+    ChipType as TootOttoChipType, DummyGrid as TootOttoGrid, Game as TootOttoGame,
+    GameEvents as TootOttoGameEvents,
+};
 use std::io;
 
 fn main() {
@@ -138,6 +143,7 @@ impl TootOttoGameEvents for TootOttoCliInterface {
             } else if chip_str == "O" {
                 chip_type = TootOttoChipType::O;
             } else {
+                println!("Invalid input");
                 return Err(());
             }
         } else {
@@ -157,12 +163,15 @@ impl TootOttoGameEvents for TootOttoCliInterface {
         match chip_type {
             TootOttoChipType::T => {
                 chip_str = "T";
-            },
+            }
             TootOttoChipType::O => {
                 chip_str = "O";
-            },
+            }
         };
-        println!("{} Selected Chip Type {} and Column {}", player, chip_str, col);
+        println!(
+            "{} Selected Chip Type {} and Column {}",
+            player, chip_str, col
+        );
     }
 
     fn animate_chip(&self) {}

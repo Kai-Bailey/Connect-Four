@@ -195,10 +195,22 @@ impl Game {
 
         for i in 0..self.dummy_grid.num_rows {
             for j in 0..self.dummy_grid.num_cols {
-                temp_r1[0] = 0; temp_r1[1] = 0; temp_r1[2] = 0; temp_r1[3] = 0;
-                temp_b1[0] = 0; temp_b1[1] = 0; temp_b1[2] = 0; temp_b1[3] = 0;
-                temp_br1[0] = 0; temp_br1[1] = 0; temp_br1[2] = 0; temp_br1[3] = 0;
-                temp_br2[0] = 0; temp_br2[1] = 0; temp_br2[2] = 0; temp_br2[3] = 0;
+                temp_r1[0] = 0;
+                temp_r1[1] = 0;
+                temp_r1[2] = 0;
+                temp_r1[3] = 0;
+                temp_b1[0] = 0;
+                temp_b1[1] = 0;
+                temp_b1[2] = 0;
+                temp_b1[3] = 0;
+                temp_br1[0] = 0;
+                temp_br1[1] = 0;
+                temp_br1[2] = 0;
+                temp_br1[3] = 0;
+                temp_br2[0] = 0;
+                temp_br2[1] = 0;
+                temp_br2[2] = 0;
+                temp_br2[3] = 0;
 
                 for k in 0..4 {
                     // From (i,j) to right
@@ -230,13 +242,29 @@ impl Game {
                     return Some(1);
                 } else if temp_b1[0] == O && temp_b1[1] == T && temp_b1[2] == T && temp_b1[3] == O {
                     return Some(-1);
-                } else if temp_br1[0] == T && temp_br1[1] == O && temp_br1[2] == O && temp_br1[3] == T {
+                } else if temp_br1[0] == T
+                    && temp_br1[1] == O
+                    && temp_br1[2] == O
+                    && temp_br1[3] == T
+                {
                     return Some(1);
-                } else if temp_br1[0] == O && temp_br1[1] == T && temp_br1[2] == T && temp_br1[3] == O {
+                } else if temp_br1[0] == O
+                    && temp_br1[1] == T
+                    && temp_br1[2] == T
+                    && temp_br1[3] == O
+                {
                     return Some(-1);
-                } else if temp_br2[0] == T && temp_br2[1] == O && temp_br2[2] == O && temp_br2[3] == T {
+                } else if temp_br2[0] == T
+                    && temp_br2[1] == O
+                    && temp_br2[2] == O
+                    && temp_br2[3] == T
+                {
                     return Some(1);
-                } else if temp_br2[0] == O && temp_br2[1] == T && temp_br2[2] == T && temp_br2[3] == O {
+                } else if temp_br2[0] == O
+                    && temp_br2[1] == T
+                    && temp_br2[2] == T
+                    && temp_br2[3] == O
+                {
                     return Some(-1);
                 }
             }
@@ -263,8 +291,8 @@ impl Game {
         let mut insert_result = self.grid.insert_chip(col_num, grid_val);
 
         // Fall back to random agent
-        let mut rng = rand::thread_rng();
         while insert_result.is_err() {
+            let mut rng = rand::thread_rng();
             col_num = rng.gen_range(0, self.grid.num_cols);
             insert_result = self.grid.insert_chip(col_num, grid_val);
         }
