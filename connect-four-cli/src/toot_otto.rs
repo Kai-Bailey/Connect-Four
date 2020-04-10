@@ -2,7 +2,7 @@ use rand::Rng;
 use std::cmp::{max, min};
 use std::fmt;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum ChipType {
     T,
     O,
@@ -84,10 +84,12 @@ impl Game {
             handler.player_turn_message(p1_turn);
             if !p1_turn && self.with_ai {
                 let (chip_type, col_num) = self.ai_move_val(-1);
-                if self.grid.insert_chip(col_num, self.player_move_translate()).is_err() {
+                let grid_val = self.player_move_translate();
+                if self.grid.insert_chip(col_num, grid_val).is_err() {
                     continue;
                 }
-                self.dummy_grid.insert_chip(col_num, self.player_move_dummy_translate(chip_type)).unwrap();
+                let chip_value = self.player_move_dummy_translate(chip_type);
+                self.dummy_grid.insert_chip(col_num, chip_value).unwrap();
                 self.p_move += 1;
                 handler.selected_column(self.p1.clone(), chip_type, col_num);
                 p1_turn = !p1_turn;
@@ -101,7 +103,8 @@ impl Game {
                         handler.invalid_move();
                         continue;
                     }
-                    self.dummy_grid.insert_chip(col_num, self.player_move_dummy_translate(chip_type)).unwrap();
+                    let chip_value = self.player_move_dummy_translate(chip_type);
+                    self.dummy_grid.insert_chip(col_num, chip_value).unwrap();
                     self.p_move += 1;
                     if p1_turn {
                         handler.selected_column(self.p1.clone(), chip_type, col_num);
@@ -142,7 +145,7 @@ impl Game {
         return -1;
     }
 
-    pub fn player_move_dummy_translate(self, chip_type: ChipType) -> i32 {
+    pub fn player_move_dummy_translate(&self, chip_type: ChipType) -> i32 {
         match chip_type {
             ChipType::T => 1,
             ChipType::O => -1,
@@ -151,15 +154,14 @@ impl Game {
 
     #[allow(dead_code)] // Used by web
     pub fn make_move(&mut self, chip_type: ChipType, col_num: usize) -> Result<(usize, usize), ()> {
-        panic!("TODO");
-
         let grid_val = self.player_move_translate();
 
         let insert_result = self.grid.insert_chip(col_num, grid_val);
         if insert_result.is_err() {
             return Err(());
         }
-        self.dummy_grid.insert_chip(col_num, self.player_move_dummy_translate(chip_type)).unwrap();
+        let chip_value = self.player_move_dummy_translate(chip_type);
+        self.dummy_grid.insert_chip(col_num, chip_value).unwrap();
 
         self.p_move += 1;
 
@@ -181,10 +183,15 @@ impl Game {
     }
 
     fn check_win(&self) -> Option<i64> {
-        let mut temp_r1: [i32; 4];
-        let mut temp_b1: [i32; 4];
-        let mut temp_br1: [i32; 4];
-        let mut temp_br2: [i32; 4];
+        #[allow(non_snake_case)]
+        let T = self.player_move_dummy_translate(ChipType::T);
+        #[allow(non_snake_case)]
+        let O = self.player_move_dummy_translate(ChipType::O);
+
+        let mut temp_r1 = [0; 4];
+        let mut temp_b1 = [0; 4];
+        let mut temp_br1 = [0; 4];
+        let mut temp_br2 = [0; 4];
 
         for i in 0..self.dummy_grid.num_rows {
             for j in 0..self.dummy_grid.num_cols {
@@ -198,36 +205,45 @@ impl Game {
                     if j + k < 7 {
                         temp_r1[k] = self.dummy_grid.get(i, j + k);
                     }
+
                     // From (i,j) to bottom
                     if i + k < 6 {
-                        temp_b += self.grid.get(i + k, j) as i64;
+                        temp_b1[k] = self.dummy_grid.get(i + k, j);
                     }
 
                     // From (i,j) to bottom-right
                     if i + k < 6 && j + k < 7 {
-                        temp_br += self.grid.get(i + k, j + k) as i64;
+                        temp_br1[k] = self.dummy_grid.get(i + k, j + k);
                     }
 
                     // From (i,j) to top-right
                     if i as i64 - k as i64 >= 0 && j + k < 7 {
-                        temp_tr += self.grid.get(i - k, j + k) as i64;
+                        temp_br2[k] = self.dummy_grid.get(i - k, j + k);
                     }
                 }
 
-                if i64::abs(temp_r) == 4 {
-                    return Some(temp_r);
-                } else if i64::abs(temp_b) == 4 {
-                    return Some(temp_b);
-                } else if i64::abs(temp_br) == 4 {
-                    return Some(temp_br);
-                } else if i64::abs(temp_tr) == 4 {
-                    return Some(temp_tr);
+                if temp_r1[0] == T && temp_r1[1] == O && temp_r1[2] == O && temp_r1[3] == T {
+                    return Some(1);
+                } else if temp_r1[0] == O && temp_r1[1] == T && temp_r1[2] == T && temp_r1[3] == O {
+                    return Some(-1);
+                } else if temp_b1[0] == T && temp_b1[1] == O && temp_b1[2] == O && temp_b1[3] == T {
+                    return Some(1);
+                } else if temp_b1[0] == O && temp_b1[1] == T && temp_b1[2] == T && temp_b1[3] == O {
+                    return Some(-1);
+                } else if temp_br1[0] == T && temp_br1[1] == O && temp_br1[2] == O && temp_br1[3] == T {
+                    return Some(1);
+                } else if temp_br1[0] == O && temp_br1[1] == T && temp_br1[2] == T && temp_br1[3] == O {
+                    return Some(-1);
+                } else if temp_br2[0] == T && temp_br2[1] == O && temp_br2[2] == O && temp_br2[3] == T {
+                    return Some(1);
+                } else if temp_br2[0] == O && temp_br2[1] == T && temp_br2[2] == T && temp_br2[3] == O {
+                    return Some(-1);
                 }
             }
         }
 
         // Draw
-        if self.p_move == (self.grid.num_rows * self.grid.num_cols) as i64 {
+        if self.p_move == (self.dummy_grid.num_rows * self.dummy_grid.num_cols) as i64 {
             match self.state {
                 State::Done => {}
                 _ => {
@@ -241,17 +257,19 @@ impl Game {
 
     #[allow(dead_code)] // Used by web
     pub fn ai_make_move(&mut self) -> Result<(usize, usize, usize), ()> {
-        let mut col_num = self.ai_move_val(-1);
+        let (chip_type, mut col_num) = self.ai_move_val(-1);
         let grid_val = self.player_move_translate();
 
         let mut insert_result = self.grid.insert_chip(col_num, grid_val);
 
         // Fall back to random agent
+        let mut rng = rand::thread_rng();
         while insert_result.is_err() {
-            let mut rng = rand::thread_rng();
             col_num = rng.gen_range(0, self.grid.num_cols);
             insert_result = self.grid.insert_chip(col_num, grid_val);
         }
+        let chip_value = self.player_move_dummy_translate(chip_type);
+        self.dummy_grid.insert_chip(col_num, chip_value).unwrap();
 
         self.p_move += 1;
 
@@ -276,7 +294,16 @@ impl Game {
         let state = &self.grid.clone();
         let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
         let choice = choice_val.1;
-        return choice as usize;
+
+        let chip_type;
+        let mut rng = rand::thread_rng();
+        if rng.gen() {
+            chip_type = ChipType::T;
+        } else {
+            chip_type = ChipType::O;
+        }
+
+        return (chip_type, choice as usize);
     }
 
     fn ai_check_state(state: &Grid) -> (i64, i64) {

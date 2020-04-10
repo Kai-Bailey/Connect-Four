@@ -138,8 +138,10 @@ impl TootOttoGameEvents for TootOttoCliInterface {
             } else if chip_str == "O" {
                 chip_type = TootOttoChipType::O;
             } else {
-                return Err(())
+                return Err(());
             }
+        } else {
+            return Err(());
         }
 
         println!("Please select a column (0-{})", col_size - 1);

@@ -178,6 +178,7 @@ impl Game {
                     if j + k < 7 {
                         temp_r += self.grid.get(i, j + k) as i64;
                     }
+
                     // From (i,j) to bottom
                     if i + k < 6 {
                         temp_b += self.grid.get(i + k, j) as i64;
