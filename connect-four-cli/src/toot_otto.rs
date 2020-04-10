@@ -214,22 +214,22 @@ impl Game {
 
                 for k in 0..4 {
                     // From (i,j) to right
-                    if j + k < 7 {
+                    if j + k < self.dummy_grid.num_cols {
                         temp_r1[k] = self.dummy_grid.get(i, j + k);
                     }
 
                     // From (i,j) to bottom
-                    if i + k < 6 {
+                    if i + k < self.dummy_grid.num_rows {
                         temp_b1[k] = self.dummy_grid.get(i + k, j);
                     }
 
                     // From (i,j) to bottom-right
-                    if i + k < 6 && j + k < 7 {
+                    if i + k < self.dummy_grid.num_rows && j + k < self.dummy_grid.num_cols {
                         temp_br1[k] = self.dummy_grid.get(i + k, j + k);
                     }
 
                     // From (i,j) to top-right
-                    if i as i64 - k as i64 >= 0 && j + k < 7 {
+                    if i as i64 - k as i64 >= 0 && j + k < self.dummy_grid.num_cols {
                         temp_br2[k] = self.dummy_grid.get(i - k, j + k);
                     }
                 }

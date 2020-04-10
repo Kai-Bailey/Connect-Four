@@ -175,22 +175,22 @@ impl Game {
 
                 for k in 0..4 {
                     // From (i,j) to right
-                    if j + k < 7 {
+                    if j + k < self.grid.num_cols {
                         temp_r += self.grid.get(i, j + k) as i64;
                     }
 
                     // From (i,j) to bottom
-                    if i + k < 6 {
+                    if i + k < self.grid.num_rows {
                         temp_b += self.grid.get(i + k, j) as i64;
                     }
 
                     // From (i,j) to bottom-right
-                    if i + k < 6 && j + k < 7 {
+                    if i + k < self.grid.num_rows && j + k < self.grid.num_cols {
                         temp_br += self.grid.get(i + k, j + k) as i64;
                     }
 
                     // From (i,j) to top-right
-                    if i as i64 - k as i64 >= 0 && j + k < 7 {
+                    if i as i64 - k as i64 >= 0 && j + k < self.grid.num_cols {
                         temp_tr += self.grid.get(i - k, j + k) as i64;
                     }
                 }
