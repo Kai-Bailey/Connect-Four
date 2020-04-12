@@ -83,7 +83,7 @@ impl Game {
             handler.show_grid(&self.dummy_grid);
             handler.player_turn_message(p1_turn);
             if !p1_turn && self.with_ai {
-                let (chip_type, col_num) = self.ai_move_val(-1);
+                let (chip_type, col_num) = self.ai_move_val();
                 let grid_val = self.player_move_translate();
                 if self.grid.insert_chip(col_num, grid_val).is_err() {
                     continue;
@@ -285,7 +285,7 @@ impl Game {
 
     #[allow(dead_code)] // Used by web
     pub fn ai_make_move(&mut self) -> Result<(usize, usize, usize), ()> {
-        let (chip_type, mut col_num) = self.ai_move_val(-1);
+        let (chip_type, mut col_num) = self.ai_move_val();
         let grid_val = self.player_move_translate();
 
         let mut insert_result = self.grid.insert_chip(col_num, grid_val);
@@ -318,68 +318,146 @@ impl Game {
         return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num));
     }
 
-    fn ai_move_val(&self, ai_move_val: i64) -> (ChipType, usize) {
-        let state = &self.grid.clone();
-        let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
-        let choice = choice_val.1;
+    fn ai_move_val(&self) -> (ChipType, usize) {
+        let state = &self.dummy_grid.clone();
 
-        let chip_type;
-        let mut rng = rand::thread_rng();
-        if rng.gen() {
-            chip_type = ChipType::T;
+        // Play T
+        let (t_val, t_move) = self.ai_max_state(
+            &state,
+            0,
+            -100000000007,
+            100000000007,
+            self.player_move_dummy_translate(ChipType::T) as i64,
+        );
+        // Play O
+        let (o_val, o_move) = self.ai_max_state(
+            &state,
+            0,
+            -100000000007,
+            100000000007,
+            self.player_move_dummy_translate(ChipType::O) as i64,
+        );
+
+        println!(
+            "[DEBUG] ChipType => (value, column) ;; T => ({}, {}) ;; O => ({}, {})",
+            t_val, t_move, o_val, o_move
+        );
+
+        if t_val > o_val {
+            return (ChipType::T, t_move as usize);
+        } else if t_val < o_val {
+            return (ChipType::O, o_move as usize);
         } else {
-            chip_type = ChipType::O;
+            // Play T and O have same value? Choose a random one
+            let mut rng = rand::thread_rng();
+            if rng.gen() {
+                return (ChipType::T, t_move as usize);
+            } else {
+                return (ChipType::O, o_move as usize);
+            }
         }
-
-        return (chip_type, choice as usize);
     }
 
-    fn ai_check_state(state: &Grid) -> (i64, i64) {
+    fn ai_check_state(&self, state: &DummyGrid) -> (i64, i64) {
+        #[allow(non_snake_case)]
+        let T = self.player_move_dummy_translate(ChipType::T);
+        #[allow(non_snake_case)]
+        let O = self.player_move_dummy_translate(ChipType::O);
+
         let mut win_val: i64 = 0;
         let mut chain_val: i64 = 0;
-        let mut temp_r: i64;
-        let mut temp_b: i64;
-        let mut temp_br: i64;
-        let mut temp_tr: i64;
+
+        let mut temp_r1 = [0; 4];
+        let mut temp_b1 = [0; 4];
+        let mut temp_br1 = [0; 4];
+        let mut temp_br2 = [0; 4];
 
         let num_rows = state.num_rows;
         let num_cols = state.num_cols;
 
         for i in 0..num_rows {
             for j in 0..num_cols {
-                temp_r = 0;
-                temp_b = 0;
-                temp_br = 0;
-                temp_tr = 0;
+                temp_r1[0] = 0;
+                temp_r1[1] = 0;
+                temp_r1[2] = 0;
+                temp_r1[3] = 0;
+                temp_b1[0] = 0;
+                temp_b1[1] = 0;
+                temp_b1[2] = 0;
+                temp_b1[3] = 0;
+                temp_br1[0] = 0;
+                temp_br1[1] = 0;
+                temp_br1[2] = 0;
+                temp_br1[3] = 0;
+                temp_br2[0] = 0;
+                temp_br2[1] = 0;
+                temp_br2[2] = 0;
+                temp_br2[3] = 0;
 
                 for k in 0..4 {
                     if j + k < num_cols {
-                        temp_r += state.get(i, j + k) as i64;
+                        temp_r1[k] = state.get(i, j + k);
                     }
                     if i + k < num_rows {
-                        temp_b += state.get(i + k, j) as i64;
+                        temp_b1[k] = state.get(i + k, j);
                     }
                     if i + k < num_rows && j + k < num_cols {
-                        temp_br += state.get(i + k, j + k) as i64;
+                        temp_br1[k] = state.get(i + k, j + k);
                     }
                     if i as i64 - k as i64 >= 0 && j + k < num_cols {
-                        temp_tr += state.get(i - k, j + k) as i64;
+                        temp_br2[k] = state.get(i - k, j + k);
                     }
                 }
+
+                // AI wants OTTO, check to see how many matches
+                let temp_r =
+                    (temp_r1[0] * O + temp_r1[1] * T + temp_r1[2] * T + temp_r1[3] * O) as i64;
+                let temp_b =
+                    (temp_b1[0] * O + temp_b1[1] * T + temp_b1[2] * T + temp_b1[3] * O) as i64;
+                let temp_br =
+                    (temp_br1[0] * O + temp_br1[1] * T + temp_br1[2] * T + temp_br1[3] * O) as i64;
+                let temp_tr =
+                    (temp_br2[0] * O + temp_br2[1] * T + temp_br2[2] * T + temp_br2[3] * O) as i64;
 
                 chain_val += temp_r * temp_r * temp_r;
                 chain_val += temp_b * temp_b * temp_b;
                 chain_val += temp_br * temp_br * temp_br;
                 chain_val += temp_tr * temp_tr * temp_tr;
 
-                if i64::abs(temp_r) == 4 {
-                    win_val = temp_r;
-                } else if i64::abs(temp_b) == 4 {
-                    win_val = temp_b;
-                } else if i64::abs(temp_br) == 4 {
-                    win_val = temp_br;
-                } else if i64::abs(temp_tr) == 4 {
-                    win_val = temp_tr;
+                // Player wants TOOT, but AI hates it (-4)
+                // AI wants OTTO (+4)
+                if temp_r1[0] == T && temp_r1[1] == O && temp_r1[2] == O && temp_r1[3] == T {
+                    win_val = -4;
+                } else if temp_r1[0] == O && temp_r1[1] == T && temp_r1[2] == T && temp_r1[3] == O {
+                    win_val = 4;
+                } else if temp_b1[0] == T && temp_b1[1] == O && temp_b1[2] == O && temp_b1[3] == T {
+                    win_val = -4;
+                } else if temp_b1[0] == O && temp_b1[1] == T && temp_b1[2] == T && temp_b1[3] == O {
+                    win_val = 4;
+                } else if temp_br1[0] == T
+                    && temp_br1[1] == O
+                    && temp_br1[2] == O
+                    && temp_br1[3] == T
+                {
+                    win_val = -4;
+                } else if temp_br1[0] == O
+                    && temp_br1[1] == T
+                    && temp_br1[2] == T
+                    && temp_br1[3] == O
+                {
+                    win_val = 4;
+                } else if temp_br2[0] == T
+                    && temp_br2[1] == O
+                    && temp_br2[2] == O
+                    && temp_br2[3] == T
+                {
+                    win_val = -4;
+                } else if temp_br2[0] == O
+                    && temp_br2[1] == T
+                    && temp_br2[2] == T
+                    && temp_br2[3] == O
+                {
+                    win_val = 4;
                 }
             }
         }
@@ -389,22 +467,23 @@ impl Game {
 
     fn ai_value(
         &self,
-        state: &Grid,
+        state: &DummyGrid,
         depth: u32,
         alpha: i64,
         beta: i64,
         ai_move_val: i64,
     ) -> (i64, i64) {
-        let val = Game::ai_check_state(&state);
-        if depth >= 4 {
+        let val = self.ai_check_state(&state);
+        // TOOT-OTTO is significantly more complicated than Connect4, reduce depth to 3
+        if depth >= 3 {
             let mut ret_value;
             let win_val = val.0;
             let chain_val = val.1 * ai_move_val;
             ret_value = chain_val;
 
-            if win_val == 4 * ai_move_val {
+            if win_val == 4 {
                 ret_value = 999999;
-            } else if win_val == 4 * ai_move_val * -1 {
+            } else if win_val == 4 * -1 {
                 ret_value = 999999 * -1;
             }
             ret_value -= (depth * depth) as i64;
@@ -413,22 +492,83 @@ impl Game {
         }
 
         let win = val.0;
-        if win == 4 * ai_move_val {
+        if win == 4 {
             return ((999999 - depth * depth) as i64, -1);
         }
-        if win == 4 * ai_move_val * -1 {
+        if win == 4 * -1 {
             return (999999 * -1 - ((depth * depth) as i64), -1);
         }
 
         if depth % 2 == 0 {
-            return self.ai_min_state(state, depth + 1, alpha, beta, ai_move_val);
+            // Play T
+            let (t_val, t_move) = self.ai_min_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::T) as i64,
+            );
+            // Play O
+            let (o_val, o_move) = self.ai_min_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::O) as i64,
+            );
+
+            // AI wants player to lose, so choose the minimum value
+            if t_val > o_val {
+                return (o_val, o_move);
+            } else if t_val < o_val {
+                return (t_val, t_move);
+            } else {
+                // Play T and O have same value? Choose a random one
+                let mut rng = rand::thread_rng();
+                if rng.gen() {
+                    return (t_val, t_move);
+                } else {
+                    return (o_val, o_move);
+                }
+            }
+        } else {
+            // Play T
+            let (t_val, t_move) = self.ai_max_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::T) as i64,
+            );
+            // Play O
+            let (o_val, o_move) = self.ai_max_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::O) as i64,
+            );
+
+            // AI wants to win, so choose the maximum value
+            if t_val > o_val {
+                return (t_val, t_move);
+            } else if t_val < o_val {
+                return (o_val, o_move);
+            } else {
+                // Play T and O have same value? Choose a random one
+                let mut rng = rand::thread_rng();
+                if rng.gen() {
+                    return (t_val, t_move);
+                } else {
+                    return (o_val, o_move);
+                }
+            }
         }
-        return self.ai_max_state(state, depth + 1, alpha, beta, ai_move_val);
     }
 
     fn ai_max_state(
         &self,
-        state: &Grid,
+        state: &DummyGrid,
         depth: u32,
         alpha: i64,
         beta: i64,
@@ -437,7 +577,7 @@ impl Game {
         let mut v: i64 = -100000000007;
         let mut _move: i64 = -1;
         let mut temp_val: (i64, i64);
-        let mut temp_state: Grid;
+        let mut temp_state: DummyGrid;
         let mut move_queue: Vec<usize> = Vec::new();
         let mut alpha = alpha;
 
@@ -480,7 +620,7 @@ impl Game {
 
     fn ai_min_state(
         &self,
-        state: &Grid,
+        state: &DummyGrid,
         depth: u32,
         alpha: i64,
         beta: i64,
@@ -489,7 +629,7 @@ impl Game {
         let mut v: i64 = 100000000007;
         let mut _move: i64 = -1;
         let mut temp_val: (i64, i64);
-        let mut temp_state: Grid;
+        let mut temp_state: DummyGrid;
         let mut move_queue: Vec<usize> = Vec::new();
         let mut beta = beta;
 
@@ -524,7 +664,7 @@ impl Game {
         }
     }
 
-    fn ai_fill_map(&self, state: &Grid, column: usize, value: i64) -> Option<Grid> {
+    fn ai_fill_map(&self, state: &DummyGrid, column: usize, value: i64) -> Option<DummyGrid> {
         let mut temp_map = state.clone();
         if temp_map.get(0, column) != 0 || /* column < 0 || */ column >= self.grid.num_cols {
             return None;
