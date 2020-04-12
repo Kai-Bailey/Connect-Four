@@ -319,7 +319,7 @@ impl Game {
     }
 
     fn ai_move_val(&self, ai_move_val: i64) -> (ChipType, usize) {
-        let state = &self.grid.clone();
+        let state = &self.dummy_grid.clone();
         let choice_val = self.ai_max_state(&state, 0, -100000000007, 100000000007, ai_move_val);
         let choice = choice_val.1;
 
@@ -334,7 +334,7 @@ impl Game {
         return (chip_type, choice as usize);
     }
 
-    fn ai_check_state(state: &Grid) -> (i64, i64) {
+    fn ai_check_state(state: &DummyGrid) -> (i64, i64) {
         let mut win_val: i64 = 0;
         let mut chain_val: i64 = 0;
         let mut temp_r: i64;
@@ -389,7 +389,7 @@ impl Game {
 
     fn ai_value(
         &self,
-        state: &Grid,
+        state: &DummyGrid,
         depth: u32,
         alpha: i64,
         beta: i64,
@@ -428,7 +428,7 @@ impl Game {
 
     fn ai_max_state(
         &self,
-        state: &Grid,
+        state: &DummyGrid,
         depth: u32,
         alpha: i64,
         beta: i64,
@@ -437,7 +437,7 @@ impl Game {
         let mut v: i64 = -100000000007;
         let mut _move: i64 = -1;
         let mut temp_val: (i64, i64);
-        let mut temp_state: Grid;
+        let mut temp_state: DummyGrid;
         let mut move_queue: Vec<usize> = Vec::new();
         let mut alpha = alpha;
 
@@ -480,7 +480,7 @@ impl Game {
 
     fn ai_min_state(
         &self,
-        state: &Grid,
+        state: &DummyGrid,
         depth: u32,
         alpha: i64,
         beta: i64,
@@ -489,7 +489,7 @@ impl Game {
         let mut v: i64 = 100000000007;
         let mut _move: i64 = -1;
         let mut temp_val: (i64, i64);
-        let mut temp_state: Grid;
+        let mut temp_state: DummyGrid;
         let mut move_queue: Vec<usize> = Vec::new();
         let mut beta = beta;
 
@@ -524,7 +524,7 @@ impl Game {
         }
     }
 
-    fn ai_fill_map(&self, state: &Grid, column: usize, value: i64) -> Option<Grid> {
+    fn ai_fill_map(&self, state: &DummyGrid, column: usize, value: i64) -> Option<DummyGrid> {
         let mut temp_map = state.clone();
         if temp_map.get(0, column) != 0 || /* column < 0 || */ column >= self.grid.num_cols {
             return None;
