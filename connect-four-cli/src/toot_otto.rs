@@ -334,52 +334,102 @@ impl Game {
         return (chip_type, choice as usize);
     }
 
-    fn ai_check_state(state: &DummyGrid) -> (i64, i64) {
+    fn ai_check_state(&self, state: &DummyGrid) -> (i64, i64) {
+        #[allow(non_snake_case)]
+        let T = self.player_move_dummy_translate(ChipType::T);
+        #[allow(non_snake_case)]
+        let O = self.player_move_dummy_translate(ChipType::O);
+
         let mut win_val: i64 = 0;
         let mut chain_val: i64 = 0;
-        let mut temp_r: i64;
-        let mut temp_b: i64;
-        let mut temp_br: i64;
-        let mut temp_tr: i64;
+
+        let mut temp_r1 = [0; 4];
+        let mut temp_b1 = [0; 4];
+        let mut temp_br1 = [0; 4];
+        let mut temp_br2 = [0; 4];
 
         let num_rows = state.num_rows;
         let num_cols = state.num_cols;
 
         for i in 0..num_rows {
             for j in 0..num_cols {
-                temp_r = 0;
-                temp_b = 0;
-                temp_br = 0;
-                temp_tr = 0;
+                temp_r1[0] = 0;
+                temp_r1[1] = 0;
+                temp_r1[2] = 0;
+                temp_r1[3] = 0;
+                temp_b1[0] = 0;
+                temp_b1[1] = 0;
+                temp_b1[2] = 0;
+                temp_b1[3] = 0;
+                temp_br1[0] = 0;
+                temp_br1[1] = 0;
+                temp_br1[2] = 0;
+                temp_br1[3] = 0;
+                temp_br2[0] = 0;
+                temp_br2[1] = 0;
+                temp_br2[2] = 0;
+                temp_br2[3] = 0;
 
                 for k in 0..4 {
                     if j + k < num_cols {
-                        temp_r += state.get(i, j + k) as i64;
+                        temp_r1[k] = state.get(i, j + k);
                     }
                     if i + k < num_rows {
-                        temp_b += state.get(i + k, j) as i64;
+                        temp_b1[k] = state.get(i + k, j);
                     }
                     if i + k < num_rows && j + k < num_cols {
-                        temp_br += state.get(i + k, j + k) as i64;
+                        temp_br1[k] = state.get(i + k, j + k);
                     }
                     if i as i64 - k as i64 >= 0 && j + k < num_cols {
-                        temp_tr += state.get(i - k, j + k) as i64;
+                        temp_br2[k] = state.get(i - k, j + k);
                     }
                 }
+
+                // AI wants OTTO, check to see how many matches
+                let temp_r = (temp_r1[0] * O + temp_r1[1] * T + temp_r1[2] * T + temp_r1[3] * O) as i64;
+                let temp_b = (temp_b1[0] * O + temp_b1[1] * T + temp_b1[2] * T + temp_b1[3] * O) as i64;
+                let temp_br = (temp_br1[0] * O + temp_br1[1] * T + temp_br1[2] * T + temp_br1[3] * O) as i64;
+                let temp_tr = (temp_br2[0] * O + temp_br2[1] * T + temp_br2[2] * T + temp_br2[3] * O) as i64;
 
                 chain_val += temp_r * temp_r * temp_r;
                 chain_val += temp_b * temp_b * temp_b;
                 chain_val += temp_br * temp_br * temp_br;
                 chain_val += temp_tr * temp_tr * temp_tr;
 
-                if i64::abs(temp_r) == 4 {
-                    win_val = temp_r;
-                } else if i64::abs(temp_b) == 4 {
-                    win_val = temp_b;
-                } else if i64::abs(temp_br) == 4 {
-                    win_val = temp_br;
-                } else if i64::abs(temp_tr) == 4 {
-                    win_val = temp_tr;
+                // Player wants TOOT, but AI hates it (-4)
+                // AI wants OTTO (+4)
+                if temp_r1[0] == T && temp_r1[1] == O && temp_r1[2] == O && temp_r1[3] == T {
+                    win_val = -4;
+                } else if temp_r1[0] == O && temp_r1[1] == T && temp_r1[2] == T && temp_r1[3] == O {
+                    win_val = 4;
+                } else if temp_b1[0] == T && temp_b1[1] == O && temp_b1[2] == O && temp_b1[3] == T {
+                    win_val = -4;
+                } else if temp_b1[0] == O && temp_b1[1] == T && temp_b1[2] == T && temp_b1[3] == O {
+                    win_val = 4;
+                } else if temp_br1[0] == T
+                    && temp_br1[1] == O
+                    && temp_br1[2] == O
+                    && temp_br1[3] == T
+                {
+                    win_val = -4;
+                } else if temp_br1[0] == O
+                    && temp_br1[1] == T
+                    && temp_br1[2] == T
+                    && temp_br1[3] == O
+                {
+                    win_val = 4;
+                } else if temp_br2[0] == T
+                    && temp_br2[1] == O
+                    && temp_br2[2] == O
+                    && temp_br2[3] == T
+                {
+                    win_val = -4;
+                } else if temp_br2[0] == O
+                    && temp_br2[1] == T
+                    && temp_br2[2] == T
+                    && temp_br2[3] == O
+                {
+                    win_val = 4;
                 }
             }
         }
@@ -395,7 +445,7 @@ impl Game {
         beta: i64,
         ai_move_val: i64,
     ) -> (i64, i64) {
-        let val = Game::ai_check_state(&state);
+        let val = self.ai_check_state(&state);
         if depth >= 4 {
             let mut ret_value;
             let win_val = val.0;
