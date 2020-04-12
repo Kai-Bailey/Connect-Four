@@ -386,10 +386,14 @@ impl Game {
                 }
 
                 // AI wants OTTO, check to see how many matches
-                let temp_r = (temp_r1[0] * O + temp_r1[1] * T + temp_r1[2] * T + temp_r1[3] * O) as i64;
-                let temp_b = (temp_b1[0] * O + temp_b1[1] * T + temp_b1[2] * T + temp_b1[3] * O) as i64;
-                let temp_br = (temp_br1[0] * O + temp_br1[1] * T + temp_br1[2] * T + temp_br1[3] * O) as i64;
-                let temp_tr = (temp_br2[0] * O + temp_br2[1] * T + temp_br2[2] * T + temp_br2[3] * O) as i64;
+                let temp_r =
+                    (temp_r1[0] * O + temp_r1[1] * T + temp_r1[2] * T + temp_r1[3] * O) as i64;
+                let temp_b =
+                    (temp_b1[0] * O + temp_b1[1] * T + temp_b1[2] * T + temp_b1[3] * O) as i64;
+                let temp_br =
+                    (temp_br1[0] * O + temp_br1[1] * T + temp_br1[2] * T + temp_br1[3] * O) as i64;
+                let temp_tr =
+                    (temp_br2[0] * O + temp_br2[1] * T + temp_br2[2] * T + temp_br2[3] * O) as i64;
 
                 chain_val += temp_r * temp_r * temp_r;
                 chain_val += temp_b * temp_b * temp_b;
