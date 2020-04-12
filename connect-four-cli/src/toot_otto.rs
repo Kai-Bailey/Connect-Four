@@ -322,11 +322,26 @@ impl Game {
         let state = &self.dummy_grid.clone();
 
         // Play T
-        let (t_val, t_move) = self.ai_max_state(&state, 0, -100000000007, 100000000007, self.player_move_dummy_translate(ChipType::T) as i64);
+        let (t_val, t_move) = self.ai_max_state(
+            &state,
+            0,
+            -100000000007,
+            100000000007,
+            self.player_move_dummy_translate(ChipType::T) as i64,
+        );
         // Play O
-        let (o_val, o_move) = self.ai_max_state(&state, 0, -100000000007, 100000000007, self.player_move_dummy_translate(ChipType::O) as i64);
+        let (o_val, o_move) = self.ai_max_state(
+            &state,
+            0,
+            -100000000007,
+            100000000007,
+            self.player_move_dummy_translate(ChipType::O) as i64,
+        );
 
-        println!("[DEBUG] ChipType => (value, column) -- T => ({}, {}) -- O => ({}, {})", t_val, t_move, o_val, o_move);
+        println!(
+            "[DEBUG] ChipType => (value, column) ;; T => ({}, {}) ;; O => ({}, {})",
+            t_val, t_move, o_val, o_move
+        );
 
         if t_val > o_val {
             return (ChipType::T, t_move as usize);
@@ -459,7 +474,8 @@ impl Game {
         ai_move_val: i64,
     ) -> (i64, i64) {
         let val = self.ai_check_state(&state);
-        if depth >= 4 {
+        // TOOT-OTTO is significantly more complicated than Connect4, reduce depth to 3
+        if depth >= 3 {
             let mut ret_value;
             let win_val = val.0;
             let chain_val = val.1 * ai_move_val;
@@ -484,9 +500,70 @@ impl Game {
         }
 
         if depth % 2 == 0 {
-            return self.ai_min_state(state, depth + 1, alpha, beta, ai_move_val);
+            // Play T
+            let (t_val, t_move) = self.ai_min_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::T) as i64,
+            );
+            // Play O
+            let (o_val, o_move) = self.ai_min_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::O) as i64,
+            );
+
+            // AI wants player to lose, so choose the minimum value
+            if t_val > o_val {
+                return (o_val, o_move);
+            } else if t_val < o_val {
+                return (t_val, t_move);
+            } else {
+                // Play T and O have same value? Choose a random one
+                let mut rng = rand::thread_rng();
+                if rng.gen() {
+                    return (t_val, t_move);
+                } else {
+                    return (o_val, o_move);
+                }
+            }
+        } else {
+            // Play T
+            let (t_val, t_move) = self.ai_max_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::T) as i64,
+            );
+            // Play O
+            let (o_val, o_move) = self.ai_max_state(
+                state,
+                depth + 1,
+                alpha,
+                beta,
+                self.player_move_dummy_translate(ChipType::O) as i64,
+            );
+
+            // AI wants to win, so choose the maximum value
+            if t_val > o_val {
+                return (t_val, t_move);
+            } else if t_val < o_val {
+                return (o_val, o_move);
+            } else {
+                // Play T and O have same value? Choose a random one
+                let mut rng = rand::thread_rng();
+                if rng.gen() {
+                    return (t_val, t_move);
+                } else {
+                    return (o_val, o_move);
+                }
+            }
         }
-        return self.ai_max_state(state, depth + 1, alpha, beta, ai_move_val);
     }
 
     fn ai_max_state(
