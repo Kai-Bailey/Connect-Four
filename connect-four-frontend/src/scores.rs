@@ -1,22 +1,28 @@
-use crate::Game;
+use crate::{Game, PlayerWins};
 use chrono::prelude::*;
+use yew::format::{Json, Nothing};
+use yew::services::fetch::{FetchService, FetchTask, Request, Response};
+use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
-
-pub struct PlayerWins {
-    PlayerName: String,
-    Wins: String,
-}
 
 pub struct ScoresModel {
     link: ComponentLink<Self>,
     games: Option<Vec<Game>>,
     gamesWonPerPlayer: Option<Vec<PlayerWins>>,
+    fetch_service: FetchService,
+    fetch_task: Option<FetchTask>,
+    fetch_task2: Option<FetchTask>,
 }
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {}
 
-pub enum Msg {}
+pub enum Msg {
+    FetchGamesComplete(Vec<Game>),
+    FetchGamesFailed,
+    FetchPlayerWinsComplete(Vec<PlayerWins>),
+    FetchPlayerWinsFailed,
+}
 
 impl Component for ScoresModel {
     type Message = Msg;
@@ -27,11 +33,28 @@ impl Component for ScoresModel {
             link,
             games: None,
             gamesWonPerPlayer: None,
+            fetch_service: FetchService::new(),
+            fetch_task: None,
+            fetch_task2: None,
         }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::FetchGamesComplete(body) => {
+                self.games = Some(body);
+            }
+            Msg::FetchGamesFailed => {
+                js! {alert("Failed to load game data...")}
+            }
+            Msg::FetchPlayerWinsComplete(body) => {
+                self.gamesWonPerPlayer = Some(body);
+            }
+            Msg::FetchPlayerWinsFailed => {
+                js! {alert("Failed to load wins data...")}
+            }
+        }
+        true
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -39,52 +62,39 @@ impl Component for ScoresModel {
     }
 
     fn mounted(&mut self) -> ShouldRender {
-        self.games = Some(vec![
-            Game {
-                gameType: "human".to_string(),
-                gameNumber: "5".to_string(),
-                Player1Name: "Dinula".to_string(),
-                Player2Name: "Kai".to_string(),
-                WinnerName: "Kai".to_string(),
-                GameDate: Utc.ymd(2019, 3, 17).and_hms(16, 43, 0),
-            },
-            Game {
-                gameType: "Computer".to_string(),
-                gameNumber: "5".to_string(),
-                Player1Name: "Dinula".to_string(),
-                Player2Name: "Computer".to_string(),
-                WinnerName: "Computer".to_string(),
-                GameDate: Utc.ymd(2018, 3, 17).and_hms(14, 3, 3),
-            },
-            Game {
-                gameType: "human".to_string(),
-                gameNumber: "4".to_string(),
-                Player1Name: "Hugo".to_string(),
-                Player2Name: "Kai".to_string(),
-                WinnerName: "Kai".to_string(),
-                GameDate: Utc.ymd(2017, 3, 17).and_hms(6, 41, 23),
-            },
-        ]);
+        let get_request = Request::get("http://localhost:8000/games")
+            .body(Nothing)
+            .unwrap();
+        let callback = self
+            .link
+            .callback(|response: Response<Json<Result<Vec<Game>, _>>>| {
+                if let (meta, Json(Ok(body))) = response.into_parts() {
+                    if meta.status.is_success() {
+                        return Msg::FetchGamesComplete(body);
+                    }
+                }
+                Msg::FetchGamesFailed
+            });
 
-        self.gamesWonPerPlayer = Some(vec![
-            PlayerWins {
-                PlayerName: "Kai".to_string(),
-                Wins: "5000".to_string(),
-            },
-            PlayerWins {
-                PlayerName: "Dinula".to_string(),
-                Wins: "0".to_string(),
-            },
-            PlayerWins {
-                PlayerName: "Hugo".to_string(),
-                Wins: "0".to_string(),
-            },
-            PlayerWins {
-                PlayerName: "Computer".to_string(),
-                Wins: "20".to_string(),
-            },
-        ]);
+        let task = self.fetch_service.fetch(get_request, callback);
+        self.fetch_task = Some(task.unwrap());
 
+        let get_request_wins = Request::get("http://localhost:8000/wins")
+            .body(Nothing)
+            .unwrap();
+        let callback_wins =
+            self.link
+                .callback(|response: Response<Json<Result<Vec<PlayerWins>, _>>>| {
+                    if let (meta, Json(Ok(body))) = response.into_parts() {
+                        if meta.status.is_success() {
+                            return Msg::FetchPlayerWinsComplete(body);
+                        }
+                    }
+                    Msg::FetchPlayerWinsFailed
+                });
+
+        let task2 = self.fetch_service.fetch(get_request_wins, callback_wins);
+        self.fetch_task2 = Some(task2.unwrap());
         true
     }
 
@@ -121,7 +131,6 @@ impl Component for ScoresModel {
                 </div>
                 <table>
                     <tr>
-                        <th>{"Sl. No."}</th>
                         <th>{"Game Type"}</th>
                         <th>{"Winner"}</th>
                         <th>{"Played Against"}</th>
@@ -168,10 +177,9 @@ impl ScoresModel {
     fn view_row_computer_won(&self, game: &Game) -> Html {
         html! {
             <tr>
-                <td>{game.gameNumber.clone()}</td>
                 <td>{game.gameType.clone()}</td>
-                <td>{game.Player1Name.clone()}</td>
                 <td>{game.WinnerName.clone()}</td>
+                <td>{game.Player1Name.clone()}</td>
                 <td>{game.GameDate.format("%b %e %Y %H:%M")}</td>
             </tr>
         }
@@ -180,8 +188,8 @@ impl ScoresModel {
     fn view_row_player_wins(&self, player: &PlayerWins) -> Html {
         html! {
             <tr>
-                <td>{player.PlayerName.clone()}</td>
-                <td>{player.Wins.clone()}</td>
+                <td>{player._id.clone()}</td>
+                <td>{player.count.clone()}</td>
             </tr>
         }
     }
