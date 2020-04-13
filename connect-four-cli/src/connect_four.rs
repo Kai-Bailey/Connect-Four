@@ -170,21 +170,23 @@ impl Game {
                 temp_tr = 0;
 
                 for k in 0..4 {
-                    if j + k < 7 {
+                    // From (i,j) to right
+                    if j + k < self.grid.num_cols {
                         temp_r += self.grid.get(i, j + k) as i64;
                     }
+
                     // From (i,j) to bottom
-                    if i + k < 6 {
+                    if i + k < self.grid.num_rows {
                         temp_b += self.grid.get(i + k, j) as i64;
                     }
 
                     // From (i,j) to bottom-right
-                    if i + k < 6 && j + k < 7 {
+                    if i + k < self.grid.num_rows && j + k < self.grid.num_cols {
                         temp_br += self.grid.get(i + k, j + k) as i64;
                     }
 
                     // From (i,j) to top-right
-                    if i as i64 - k as i64 >= 0 && j + k < 7 {
+                    if i as i64 - k as i64 >= 0 && j + k < self.grid.num_cols {
                         temp_tr += self.grid.get(i - k, j + k) as i64;
                     }
                 }
@@ -473,7 +475,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(row_size: usize, col_size: usize) -> Grid {
+    pub fn new(row_size: usize, col_size: usize) -> Self {
         let mut grid = Grid {
             items: [0; 80],
             num_rows: row_size,
@@ -497,9 +499,11 @@ impl Grid {
         }
         return Err(());
     }
+
     pub fn get(&self, row: usize, col: usize) -> i32 {
         self.items[col * self.num_rows + (self.num_rows - 1 - row)]
     }
+
     pub fn set(&mut self, row: usize, col: usize, val: i32) {
         self.items[col * self.num_rows + (self.num_rows - 1 - row)] = val;
     }
@@ -524,13 +528,13 @@ impl fmt::Display for Grid {
     }
 }
 
+// TODO: Is this still used?
 #[derive(Clone)]
 pub struct Row {
     pub items: Vec<i64>,
 }
 
 impl Row {
-    #[allow(dead_code)] // Used by web
     fn new(size: usize) -> Row {
         let mut row = Row { items: vec![] };
         row.items = Vec::new();
