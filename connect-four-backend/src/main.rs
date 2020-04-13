@@ -11,7 +11,7 @@ mod mongo_connection;
 #[macro_use]
 extern crate rocket;
 
-use crate::game::{Game};
+use crate::game::{Game, SerializableGame};
 use crate::mongo_connection::Conn;
 use mongodb::{bson, doc, error::Error, oid::ObjectId};
 use rocket::http::Status;
@@ -43,7 +43,7 @@ fn get_player_wins(connection: Conn) -> Result<Json<Vec<bson::Document>>, Status
 }
 
 #[post("/", format = "application/json", data = "<game>")]
-fn insert_game(game: Json<Game>, connection: Conn) -> Result<Json<ObjectId>, Status> {
+fn insert_game(game: Json<SerializableGame>, connection: Conn) -> Result<Json<ObjectId>, Status> {
     match game_repository::insert_game_handler(game.into_inner(), &connection) {
         Ok(res) => Ok(Json(res)),
         Err(err) => Err(error_status(err)),
@@ -142,12 +142,7 @@ fn main() {
                 games_id_delete
             ],
         )
-        .mount(
-            "/wins",
-            routes![
-                get_player_wins,
-            ],
-        )
+        .mount("/wins", routes![get_player_wins,])
         .mount("/users", routes![users])
         .mount(
             "/api",

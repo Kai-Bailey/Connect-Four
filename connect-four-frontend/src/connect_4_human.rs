@@ -1,3 +1,8 @@
+use crate::SerializableGame;
+use serde_json::json;
+use yew::format::{Json, Nothing};
+use yew::services::fetch::{FetchService, FetchTask, Request, Response};
+use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
 pub struct Connect4HumanModel {
@@ -6,6 +11,8 @@ pub struct Connect4HumanModel {
     player1Name: String,
     player2Name: String,
     game: Rc<RefCell<Game>>,
+    fetch_service: FetchService,
+    fetch_task: Option<FetchTask>,
 }
 
 use stdweb::traits::*;
@@ -14,11 +21,11 @@ use stdweb::web::{document, window, CanvasRenderingContext2d, FillRule};
 
 use stdweb::web::event::{ClickEvent, ResizeEvent};
 
-use stdweb::web::html_element::CanvasElement;
 use connect_four_cli::connect_four::{Game, Grid, State};
-use std::f64::consts::PI;
 use std::cell::RefCell;
+use std::f64::consts::PI;
 use std::rc::Rc;
+use stdweb::web::html_element::CanvasElement;
 
 macro_rules! enclose {
     ( ($( $x:ident ),*) $y:expr ) => {
@@ -37,6 +44,8 @@ pub enum Msg {
     gotPlayer2Name(String),
     startGame,
     clicked(Option<usize>),
+    PostGameSuccess,
+    PostGameFailed,
 }
 
 fn draw_board() {
@@ -66,12 +75,16 @@ fn draw(grid: &Grid) {
             let mut fg_color = "transparent";
             if grid.get(y, x) >= 1 {
                 fg_color = "#ff4136";
-            }
-            else if grid.get(y, x) <= -1 {
+            } else if grid.get(y, x) <= -1 {
                 fg_color = "#ffff00";
             }
-            draw_circle(75.0 * x as f64 + 100.0, 75.0 * y as f64 + 50.0, 25.0,
-                        fg_color.to_string(), "black".to_string());
+            draw_circle(
+                75.0 * x as f64 + 100.0,
+                75.0 * y as f64 + 50.0,
+                25.0,
+                fg_color.to_string(),
+                "black".to_string(),
+            );
         }
     }
 }
@@ -105,12 +118,11 @@ fn print_win(winner: String) {
     let mut msg = "".to_string();
     if winner == "Draw" {
         msg.push_str("It's a draw");
-    }
-    else{
+    } else {
         msg.push_str(winner.as_str());
         msg.push_str(" wins");
     }
-    msg.push_str(" - Click on game board to reset");
+    msg.push_str(" - Click on board to save and reset");
     context.save();
     context.set_font("14pt sans-serif");
     context.set_fill_style_color("#111");
@@ -118,32 +130,49 @@ fn print_win(winner: String) {
     context.restore();
 }
 
-fn animate(column: i64, move_val: i64, to_row: i64, cur_pos: i64, grid: Grid, game: Rc<RefCell<Game>>) {
+fn animate(
+    column: i64,
+    move_val: i64,
+    to_row: i64,
+    cur_pos: i64,
+    grid: Grid,
+    game: Rc<RefCell<Game>>,
+) {
     let mut cur_pos = cur_pos;
     let mut fg_color = "transparent";
     if move_val % 2 == 0 {
         fg_color = "#ff4136";
-    }
-    else if move_val % 2 == 1 {
+    } else if move_val % 2 == 1 {
         fg_color = "#ffff00";
     }
 
     if to_row * 75 >= cur_pos {
         clear_canvas();
         draw(&grid.clone());
-        draw_circle((75 * column + 100) as f64, (cur_pos + 50) as f64, 25.0,
-                    fg_color.to_string(), "black".to_string());
+        draw_circle(
+            (75 * column + 100) as f64,
+            (cur_pos + 50) as f64,
+            25.0,
+            fg_color.to_string(),
+            "black".to_string(),
+        );
         draw_board();
         window().request_animation_frame(move |_| {
-            animate(column, move_val, to_row, cur_pos + 25.0 as i64, grid.clone(), game)
+            animate(
+                column,
+                move_val,
+                to_row,
+                cur_pos + 25.0 as i64,
+                grid.clone(),
+                game,
+            )
         });
-    }
-    else{
+    } else {
         check_for_win(game.clone());
     }
 }
 
-fn check_for_win(game:Rc<RefCell<Game>>){
+fn check_for_win(game: Rc<RefCell<Game>>) {
     // check if game ended after move
     let state = game.clone().borrow_mut().state.clone();
     match state {
@@ -167,12 +196,12 @@ fn clear_canvas() {
 }
 
 impl Connect4HumanModel {
-    fn is_started(&self) -> bool{
+    fn is_started(&self) -> bool {
         let state = self.game.clone().borrow().state.clone();
         return match state {
             State::NonStarted => false,
-            _ => true
-        }
+            _ => true,
+        };
     }
 }
 
@@ -181,14 +210,14 @@ impl Component for Connect4HumanModel {
     type Properties = Props;
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let game = Rc::new(RefCell::new(Game{
+        let game = Rc::new(RefCell::new(Game {
             grid: Grid::new(6, 7),
             p1: "".to_string(),
             p2: "".to_string(),
             with_ai: false,
             state: State::NonStarted,
             winner: "".to_string(),
-            p_move: 0
+            p_move: 0,
         }));
         Connect4HumanModel {
             link,
@@ -196,6 +225,8 @@ impl Component for Connect4HumanModel {
             player1Name: "".to_string(),
             player2Name: "".to_string(),
             game: game.clone(),
+            fetch_service: FetchService::new(),
+            fetch_task: None,
         }
     }
 
@@ -209,7 +240,13 @@ impl Component for Connect4HumanModel {
             }
             Msg::startGame => {
                 self.gameStarted = true;
-                self.game.replace(Game::new(6, 7, false, self.player1Name.clone(), self.player2Name.clone()));
+                self.game.replace(Game::new(
+                    6,
+                    7,
+                    false,
+                    self.player1Name.clone(),
+                    self.player2Name.clone(),
+                ));
                 draw_board();
                 self.game.borrow_mut().start_game();
             }
@@ -219,24 +256,34 @@ impl Component for Connect4HumanModel {
                     State::Done => {
                         clear_canvas();
                         self.game.clone().borrow_mut().state = State::NonStarted;
-                    },
+                        self.post_win();
+                    }
                     State::Running => {
                         if col.is_some() {
                             let prev_grid = self.game.borrow().grid.clone();
-                            let insert_result = self.game.borrow_mut().make_move(col.unwrap() as usize);
-                            if insert_result.is_ok(){
-                                animate(col.unwrap() as i64,
-                                        insert_result.unwrap().1 as i64,
-                                        insert_result.unwrap().0 as i64,
-                                        0,
-                                        prev_grid,
-                                        self.game.clone());
+                            let insert_result =
+                                self.game.borrow_mut().make_move(col.unwrap() as usize);
+                            if insert_result.is_ok() {
+                                animate(
+                                    col.unwrap() as i64,
+                                    insert_result.unwrap().1 as i64,
+                                    insert_result.unwrap().0 as i64,
+                                    0,
+                                    prev_grid,
+                                    self.game.clone(),
+                                );
                             }
                         }
-                    },
+                    }
                     _ => {}
                 }
                 check_for_win(self.game.clone());
+            }
+            Msg::PostGameSuccess => {
+                js! {alert("Game was successfully saved.")}
+            }
+            Msg::PostGameFailed => {
+                js! {alert("Failed to save game...")}
             }
         }
         true
@@ -320,5 +367,29 @@ impl Component for Connect4HumanModel {
             </div>
          </div>
         }
+    }
+}
+
+impl Connect4HumanModel {
+    fn post_win(&mut self) {
+        let json_sg = json!({
+            "gameType": "Human",
+            "Player1Name": self.player1Name,
+            "Player2Name": self.player2Name,
+            "WinnerName": self.game.clone().borrow_mut().winner.clone(),
+        });
+        let callback = self.link.callback(|response: Response<Result<String, _>>| {
+            if response.status().is_success() {
+                Msg::PostGameSuccess
+            } else {
+                Msg::PostGameFailed
+            }
+        });
+        let post_request = Request::post("http://localhost:8000/games")
+            .header("Content-Type", "application/json")
+            .body(Json(&json_sg))
+            .unwrap();
+        let task = self.fetch_service.fetch(post_request, callback);
+        self.fetch_task = Some(task.unwrap());
     }
 }

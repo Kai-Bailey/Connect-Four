@@ -118,12 +118,9 @@ impl Game {
                     println!("Draw");
                 }
                 self.state = State::Done;
-                self.post_game();
             }
         }
     }
-
-    fn post_game(&self) {}
 
     pub fn player_move_translate(&self) -> i32 {
         if (self.p_move % 2) == 0 {
@@ -154,7 +151,6 @@ impl Game {
                 self.winner = "Draw".to_string();
             }
             self.state = State::Done;
-            self.post_game();
         }
 
         return Ok((insert_result.unwrap(), (self.p_move - 1) as usize));
@@ -247,7 +243,6 @@ impl Game {
                 self.winner = "Draw".to_string();
             }
             self.state = State::Done;
-            self.post_game();
         }
 
         return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num));

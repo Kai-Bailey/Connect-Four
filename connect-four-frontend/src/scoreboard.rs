@@ -1,27 +1,48 @@
 use crate::Game;
 use chrono::prelude::*;
+use yew::format::{Json, Nothing};
+use yew::services::fetch::{FetchService, FetchTask, Request, Response};
+use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
 pub struct ScoreBoardModel {
     link: ComponentLink<Self>,
     games: Option<Vec<Game>>,
+    fetch_service: FetchService,
+    fetch_task: Option<FetchTask>,
 }
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {}
 
-pub enum Msg {}
+pub enum Msg {
+    FetchGamesComplete(Vec<Game>),
+    FetchGamesFailed,
+}
 
 impl Component for ScoreBoardModel {
     type Message = Msg;
     type Properties = Props;
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        ScoreBoardModel { link, games: None }
+        ScoreBoardModel {
+            link,
+            games: None,
+            fetch_service: FetchService::new(),
+            fetch_task: None,
+        }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::FetchGamesComplete(body) => {
+                self.games = Some(body);
+            }
+            Msg::FetchGamesFailed => {
+                js! {alert("Failed to load data...")}
+            }
+        }
+        true
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -29,32 +50,22 @@ impl Component for ScoreBoardModel {
     }
 
     fn mounted(&mut self) -> ShouldRender {
-        self.games = Some(vec![
-            Game {
-                gameType: "human".to_string(),
-                gameNumber: "5".to_string(),
-                Player1Name: "Dinula".to_string(),
-                Player2Name: "Kai".to_string(),
-                WinnerName: "Kai".to_string(),
-                GameDate: Utc.ymd(2019, 3, 17).and_hms(16, 43, 0),
-            },
-            Game {
-                gameType: "Computer".to_string(),
-                gameNumber: "5".to_string(),
-                Player1Name: "Dinula".to_string(),
-                Player2Name: "Computer".to_string(),
-                WinnerName: "Computer".to_string(),
-                GameDate: Utc.ymd(2018, 3, 17).and_hms(14, 3, 3),
-            },
-            Game {
-                gameType: "human".to_string(),
-                gameNumber: "4".to_string(),
-                Player1Name: "Hugo".to_string(),
-                Player2Name: "Kai".to_string(),
-                WinnerName: "Kai".to_string(),
-                GameDate: Utc.ymd(2017, 3, 17).and_hms(6, 41, 23),
-            },
-        ]);
+        let get_request = Request::get("http://localhost:8000/games")
+            .body(Nothing)
+            .unwrap();
+        let callback = self
+            .link
+            .callback(|response: Response<Json<Result<Vec<Game>, _>>>| {
+                if let (meta, Json(Ok(body))) = response.into_parts() {
+                    if meta.status.is_success() {
+                        return Msg::FetchGamesComplete(body);
+                    }
+                }
+                Msg::FetchGamesFailed
+            });
+
+        let task = self.fetch_service.fetch(get_request, callback);
+        self.fetch_task = Some(task.unwrap());
         true
     }
 
@@ -67,7 +78,6 @@ impl Component for ScoreBoardModel {
                 <div id="game-stream">
                     <table>
                         <tr>
-                            <th>{"Game-ID"}</th>
                             <th>{"Game Type"}</th>
                             <th>{"Player1"}</th>
                             <th>{"Player2"}</th>
@@ -93,7 +103,6 @@ impl ScoreBoardModel {
     fn view_row(&self, game: &Game) -> Html {
         html! {
             <tr>
-                <td>{game.gameNumber.clone()}</td>
                 <td>{game.gameType.clone()}</td>
                 <td>{game.Player1Name.clone()}</td>
                 <td>{game.Player2Name.clone()}</td>

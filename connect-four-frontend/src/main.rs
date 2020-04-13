@@ -4,8 +4,8 @@
 extern crate stdweb;
 extern crate connect_four_cli;
 
-mod connect_4_human;
 mod connect_4_computer;
+mod connect_4_human;
 mod how_to_connect_4;
 mod how_to_toot;
 mod scoreboard;
@@ -17,9 +17,9 @@ use yew::prelude::*;
 use yew_router::{prelude::*, Switch};
 
 use crate::{
-    connect_4_human::Connect4HumanModel, connect_4_computer::Connect4ComputerModel,
-    how_to_connect_4::HowToConnect4Model, how_to_toot::HowToTootModel,
-    scoreboard::ScoreBoardModel, scores::ScoresModel, welcome::WelcomeModel,
+    connect_4_computer::Connect4ComputerModel, connect_4_human::Connect4HumanModel,
+    how_to_connect_4::HowToConnect4Model, how_to_toot::HowToTootModel, scoreboard::ScoreBoardModel,
+    scores::ScoresModel, welcome::WelcomeModel,
 };
 use yew::virtual_dom::VNode;
 use yew_router::switch::Permissive;
@@ -41,15 +41,31 @@ fn main() {
     yew::run_loop();
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+// Serialiazable game, designed to match conect_four_backend except
+// except without the date since you cannot get the current date in
+// webassembly.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct SerializableGame {
+    pub gameType: String,
+    pub Player1Name: String,
+    pub Player2Name: String,
+    pub WinnerName: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Game {
     pub gameType: String,
-    pub gameNumber: String,
     pub Player1Name: String,
     pub Player2Name: String,
     pub WinnerName: String,
     #[serde(with = "ts_milliseconds")]
     pub GameDate: DateTime<Utc>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct PlayerWins {
+    pub _id: String,
+    pub count: u32,
 }
 
 pub struct Model {}
