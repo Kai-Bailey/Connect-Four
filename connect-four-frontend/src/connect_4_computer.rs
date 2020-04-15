@@ -300,6 +300,7 @@ impl Component for Connect4ComputerModel {
                     }
                     State::Running => {
                         if col.is_some() && self.game.clone().borrow().player_move_translate() == 1
+                            && col.unwrap() >= 0 && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
                             let insert_result =
@@ -399,8 +400,8 @@ impl Component for Connect4ComputerModel {
                } else {
                 html!{
                     <div class="col-md-offset-3 col-md-8">
-                        <input id="textbox1" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
-                        <select id="board_size_dropdown">
+                        <input id="textbox1" style="margin: 5px" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
+                        <select id="board_size_dropdown" style="margin: 5px">
                             <option selected=true disabled=false value="6_7">{"6 x 7"}</option>
                             <option selected=false disabled=false value="5_4">{"5 x 4"}</option>
                             <option selected=false disabled=false value="6_5">{"6 x 5"}</option>
@@ -408,7 +409,7 @@ impl Component for Connect4ComputerModel {
                             <option selected=false disabled=false value="9_7">{"9 x 7"}</option>
                             <option selected=false disabled=false value="10_7">{"10 x 7"}</option>
                         </select>
-                        <button onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
+                        <button style="margin: 5px" onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
                     </div>
                   }
                  }
