@@ -609,9 +609,6 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_1fdc316ef6b228cc2c741ea31c7d11c236c835c7": function($0) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);var handle=($0);handle.active=false;handle.callback.drop();if(handle.abortController){handle.abortController.abort();}
             },
-            "__cargo_web_snippet_21eabd536b7b7899a6d1843b1b79b5af0aa460d9": function() {
-                var canvas=document.getElementsByTagName("canvas")[0];var context=canvas.getContext("2d");context.save();context.fillStyle="#00bfff";context.beginPath();var x,y;for(y=0;y<6;y++){for(x=0;x<7;x++){context.arc(75*x+100,75*y+50,25,0,2*Math.PI);context.rect(75*x+150,75*y,-100,100);}}context.fill();context.restore();
-            },
             "__cargo_web_snippet_22a7767e09f1cca8e9a9c425b93781008b1ecac3": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){try{return{value:function(){return($1).hash;}(),success:true};}catch(error){return{error:error,success:false};}})());
             },
@@ -657,6 +654,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_3c5e83d16a83fc7147ec91e2506438012952f55a": function($0) {
                 var o = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (o instanceof Element);
             },
+            "__cargo_web_snippet_3f65121d75f9e7466cf2838a32c69a37e1a71096": function($0) {
+                var o = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (o instanceof HTMLSelectElement);
+            },
             "__cargo_web_snippet_46518012593da937dd5f35c2fc1c5e1dcade260b": function($0, $1, $2, $3) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);$3 = Module.STDWEB_PRIVATE.to_js($3);Module.STDWEB_PRIVATE.from_js($0, (function(){try{return{value:function(){return($1).insertBefore(($2),($3));}(),success:true};}catch(error){return{error:error,success:false};}})());
             },
@@ -678,11 +678,17 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_515598dacc2aae3ba84e7207f3f75bd28fcbbd15": function($0) {
                 var o = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (o instanceof Object);
             },
+            "__cargo_web_snippet_51acf4a008d6da1f9dff02d1f05f24fbaea75368": function($0, $1, $2, $3, $4) {
+                $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);$3 = Module.STDWEB_PRIVATE.to_js($3);$4 = Module.STDWEB_PRIVATE.to_js($4);($0).rect(($1),($2),($3),($4));
+            },
             "__cargo_web_snippet_550049fd354fc2e2d13b8dacf6ebece3de7d60a0": function($0) {
                 var o = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (o instanceof CanvasRenderingContext2D);
             },
             "__cargo_web_snippet_565d7eb22cf4eeaca6c2215540351851e1420489": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).success})());
+            },
+            "__cargo_web_snippet_57a2f98b8ead212050903a7563b9d0d12a68c4d4": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){var self=($1);if(self.selectedIndex<0){return null;}else{return self.selectedIndex;}})());
             },
             "__cargo_web_snippet_5ceb98b2e46d98ffb6869e5cadbd87470e745875": function($0, $1, $2, $3) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);$3 = Module.STDWEB_PRIVATE.to_js($3);($0).pushState(($1),($2),($3));
@@ -812,6 +818,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             },
             "__cargo_web_snippet_c023351d5bff43ef3dd317b499821cd4e71492f0": function($0) {
                 var r = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (r instanceof DOMException) && (r.name === "HierarchyRequestError");
+            },
+            "__cargo_web_snippet_c0d7020c2994fa3cf8e9c6552319070c5fb5c002": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).value})());
             },
             "__cargo_web_snippet_c26ddf75f581148e029dfcd95c037bb50d502e43": function($0, $1) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);($0).value=($1);

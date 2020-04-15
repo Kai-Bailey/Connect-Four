@@ -7,7 +7,7 @@ ROOT=./target/wasm32-unknown-unknown/debug/
 DEST=../connect-four-backend/public/
 
 echo 'Building WebAssembly Files...'
-cargo web build --target=wasm32-unknown-unknown
+RUST_BACKTRACE=full cargo web build --target=wasm32-unknown-unknown
 
 echo ''
 echo 'Removing Old WebAssembly Files...'
