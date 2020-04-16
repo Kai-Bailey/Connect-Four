@@ -388,14 +388,14 @@ impl Component for TootOttoComputerModel {
                                 .borrow_mut()
                                 .make_move(chip_type, col.unwrap() as usize);
 
-                            let mut text = "";
-                            if insert_result.unwrap().2 == 1 {
-                                text = "T";
-                            } else {
-                                text = "O";
-                            }
-
                             if insert_result.is_ok() {
+                                let mut text = "";
+                                if insert_result.unwrap().2 == 1 {
+                                    text = "T";
+                                } else {
+                                    text = "O";
+                                }
+
                                 animate(
                                     col.unwrap() as i64,
                                     insert_result.unwrap().1 as i64,
