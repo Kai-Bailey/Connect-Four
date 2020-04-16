@@ -67,27 +67,37 @@ fn draw_board(game: Rc<RefCell<Game>>) {
     context.restore();
 }
 
-fn draw(grid: &Grid, num_rows: usize, num_cols: usize) {
+fn draw(grid: &Grid, dummy_grid: &DummyGrid, num_rows: usize, num_cols: usize) {
     for y in 0..num_rows {
         for x in 0..num_cols {
+            let mut text = "";
             let mut fg_color = "transparent";
+
             if grid.get(y, x) >= 1 {
                 fg_color = "#ff4136";
             } else if grid.get(y, x) <= -1 {
                 fg_color = "#ffff00";
             }
+
+            if dummy_grid.get(y, x) == 1 {
+                text = "T";
+            } else if dummy_grid.get(y, x) == -1 {
+                text = "O";
+            }
+
             draw_circle(
                 75.0 * x as f64 + 100.0,
                 75.0 * y as f64 + 50.0,
                 25.0,
                 fg_color.to_string(),
                 "black".to_string(),
+                text.to_string(),
             );
         }
     }
 }
 
-fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
+fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String, text: String) {
     let canvas: CanvasElement = document()
         .query_selector("#gameboard")
         .unwrap()
@@ -96,6 +106,7 @@ fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
         .unwrap();
     let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
 
+    context.set_font("bold 25px serif");
     context.save();
     context.set_fill_style_color(fill.as_str());
     context.set_stroke_style_color(stroke.as_str());
@@ -103,6 +114,7 @@ fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
     context.arc(x, y, r, 0.0, 2.0 * PI, false);
     context.fill(FillRule::NonZero);
     context.restore();
+    context.fill_text(text.as_str(), x - 8.5, y + 8.0, None);
 }
 
 fn print_win(winner: String) {
@@ -134,6 +146,7 @@ fn animate(
     to_row: i64,
     cur_pos: i64,
     grid: Grid,
+    dummy_grid: DummyGrid,
     game: Rc<RefCell<Game>>,
 ) {
     let mut cur_pos = cur_pos;
@@ -146,13 +159,14 @@ fn animate(
 
     if to_row * 75 >= cur_pos {
         clear_canvas();
-        draw(&grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
+        draw(&grid.clone(), &dummy_grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
         draw_circle(
             (75 * column + 100) as f64,
             (cur_pos + 50) as f64,
             25.0,
             fg_color.to_string(),
             "black".to_string(),
+            "".to_string(), // TODO
         );
         draw_board(game.clone());
         window().request_animation_frame(move |_| {
@@ -162,11 +176,12 @@ fn animate(
                 to_row,
                 cur_pos + 25.0 as i64,
                 grid.clone(),
+                dummy_grid.clone(),
                 game,
             )
         });
     } else {
-        draw(&grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
+        draw(&grid.clone(), &dummy_grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
         check_for_win(game.clone());
         let_ai_move(game.clone());
     }
@@ -177,6 +192,7 @@ fn let_ai_move(game: Rc<RefCell<Game>>) {
         game.borrow_mut().state = State::Busy;
         // let the computer make move
         let prev_grid = game.clone().borrow().grid.clone();
+        let prev_dummy_grid = game.clone().borrow().dummy_grid.clone();
         let insert_result = game.borrow_mut().ai_make_move();
         if insert_result.is_ok() {
             animate(
@@ -185,6 +201,7 @@ fn let_ai_move(game: Rc<RefCell<Game>>) {
                 insert_result.unwrap().0 as i64,
                 0,
                 prev_grid,
+                prev_dummy_grid,
                 game.clone(),
             );
         }
@@ -320,6 +337,7 @@ impl Component for TootOttoComputerModel {
                             && col.unwrap() >= 0 && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
+                            let prev_dummy_grid = self.game.borrow().dummy_grid.clone();
 
                             // Chip type
                             let sel_box: SelectElement = document()
@@ -344,6 +362,7 @@ impl Component for TootOttoComputerModel {
                                     insert_result.unwrap().0 as i64,
                                     0,
                                     prev_grid,
+                                    prev_dummy_grid,
                                     self.game.clone(),
                                 );
                             }
@@ -410,7 +429,7 @@ impl Component for TootOttoComputerModel {
     fn view(&self) -> VNode {
         let title;
         if self.is_started() {
-            title = "Human VS Computer Toot-Otto";
+            title = "Human VS Computer TOOT-OTTO";
         } else {
             title = "Enter Player Names";
         }
