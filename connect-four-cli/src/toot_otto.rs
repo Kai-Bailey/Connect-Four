@@ -41,6 +41,7 @@ pub struct Game {
     pub state: State,
     pub winner: String,
     pub p_move: i64,
+    pub max_ai_depth: u32,
 }
 
 impl Game {
@@ -50,6 +51,7 @@ impl Game {
         with_ai: bool,
         p1_name: String,
         p2_name: String,
+        max_depth: u32
     ) -> Game {
         let grid = Grid::new(row_size, col_size);
         let dummy_grid = DummyGrid::new(row_size, col_size);
@@ -62,6 +64,7 @@ impl Game {
             state: State::Running,
             winner: "".to_string(),
             p_move: 0,
+            max_ai_depth: max_depth
         };
         if with_ai {
             game.p2 = "Computer".to_string();
@@ -475,7 +478,7 @@ impl Game {
     ) -> (i64, i64) {
         let val = self.ai_check_state(&state);
         // TOOT-OTTO is significantly more complicated than Connect4, reduce depth to 3
-        if depth >= 3 {
+        if depth >= self.max_ai_depth {
             let mut ret_value;
             let win_val = val.0;
             let chain_val = val.1 * ai_move_val;

@@ -239,6 +239,7 @@ impl Component for Connect4ComputerModel {
             state: State::NonStarted,
             winner: "".to_string(),
             p_move: 0,
+            max_ai_depth: 4
         }));
         Connect4ComputerModel {
             link,
@@ -280,12 +281,27 @@ impl Component for Connect4ComputerModel {
                     _ => (6, 7)
                 };
 
+                let difficulty_box: SelectElement = document()
+                    .query_selector("#difficulty_dropdown")
+                    .unwrap()
+                    .unwrap()
+                    .try_into()
+                    .unwrap();
+
+                let max_depth = match difficulty_box.value().unwrap().as_str() {
+                    "easy" => 1,
+                    "medium" => 2,
+                    "hard" => 4,
+                    _ => 4
+                };
+
                 self.game.replace(Game::new(
                     boardSize.0,
                     boardSize.1,
                     false,
                     self.player1Name.clone(),
                     self.player2Name.clone(),
+                    max_depth
                 ));
                 draw_board(self.game.clone());
                 self.game.borrow_mut().start_game();
@@ -408,6 +424,11 @@ impl Component for Connect4ComputerModel {
                             <option selected=false disabled=false value="8_7">{"8 x 7"}</option>
                             <option selected=false disabled=false value="9_7">{"9 x 7"}</option>
                             <option selected=false disabled=false value="10_7">{"10 x 7"}</option>
+                        </select>
+                        <select id="difficulty_dropdown" style="margin: 5px">
+                            <option selected=true disabled=false value="easy">{"Easy"}</option>
+                            <option selected=false disabled=false value="medium">{"Medium"}</option>
+                            <option selected=false disabled=false value="hard">{"Hard"}</option>
                         </select>
                         <button style="margin: 5px" onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
                     </div>

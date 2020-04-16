@@ -257,15 +257,33 @@ fn start_connect_four() {
                     false,
                     "P1".to_string(),
                     "P2".to_string(),
+                    4
                 );
             }
             "2" => {
+                println!("Select AI difficulty: ");
+                println!("1) Easy");
+                println!("2) Medium");
+                println!("3) Hard");
+
+                let sel_dif = retrieve_user_input();
+                let max_ai_depth = match sel_dif {
+                    Ok(y) => match y.as_str() {
+                        "1" => 1,
+                        "2" => 2,
+                        "3" => 4,
+                        _ => 4
+                    }
+                    Err(_) => 4
+                };
+
                 game = ConnectFourGame::new(
                     num_rows,
                     num_cols,
                     true,
                     "Player".to_string(),
                     "Computer".to_string(),
+                    max_ai_depth
                 );
             }
             _ => {
@@ -355,15 +373,33 @@ fn start_toot_and_otto() {
                     false,
                     "P1".to_string(),
                     "P2".to_string(),
+                    3
                 );
             }
             "2" => {
+                // get AI difficulty
+                println!("Select AI difficulty: ");
+                println!("1) Easy");
+                println!("2) Medium");
+                println!("3) Hard");
+
+                let sel_dif = retrieve_user_input();
+                let max_ai_depth = match sel_dif {
+                    Ok(y) => match y.as_str() {
+                        "1" => 1,
+                        "2" => 2,
+                        "3" => 3,
+                        _ => 4
+                    }
+                    Err(_) => 4
+                };
                 game = TootOttoGame::new(
                     num_rows,
                     num_cols,
                     true,
                     "Player".to_string(),
                     "Computer".to_string(),
+                    max_ai_depth
                 );
             }
             _ => {

@@ -34,6 +34,7 @@ pub struct Game {
     pub state: State,
     pub winner: String,
     pub p_move: i64,
+    pub max_ai_depth: u32,
 }
 
 impl Game {
@@ -43,6 +44,7 @@ impl Game {
         with_ai: bool,
         p1_name: String,
         p2_name: String,
+        max_depth: u32,
     ) -> Game {
         let grid = Grid::new(row_size, col_size);
         let mut game = Game {
@@ -53,6 +55,7 @@ impl Game {
             state: State::Running,
             winner: "".to_string(),
             p_move: 0,
+            max_ai_depth: max_depth
         };
         if with_ai {
             game.p2 = "Computer".to_string();
@@ -317,7 +320,7 @@ impl Game {
         ai_move_val: i64,
     ) -> (i64, i64) {
         let val = Game::ai_check_state(&state);
-        if depth >= 4 {
+        if depth >= self.max_ai_depth {
             let mut ret_value;
             let win_val = val.0;
             let chain_val = val.1 * ai_move_val;
