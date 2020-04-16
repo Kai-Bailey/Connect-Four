@@ -440,7 +440,7 @@ impl Component for TootOttoComputerModel {
         canvas.set_width(canvas.offset_width() as u32);
         canvas.set_height(canvas.offset_height() as u32);
 
-        window().add_event_listener(enclose!( (canvas) move |_: ResizeEvent| {
+        window().add_event_listener(enclose!((canvas) move |_: ResizeEvent| {
             canvas.set_width(canvas.offset_width() as u32);
             canvas.set_height(canvas.offset_height() as u32);
         }));
@@ -450,7 +450,7 @@ impl Component for TootOttoComputerModel {
         let game_clone = self.game.clone();
         let link = self.link.clone();
 
-        canvas.add_event_listener(enclose!( (context) move |event: ClickEvent| {
+        canvas.add_event_listener(enclose!((context) move |event: ClickEvent| {
             let x_click = event.client_x() - rect.get_left() as i32;
             let y_click = event.client_y() - rect.get_top() as i32;
             let num_cols = game_clone.clone().borrow().grid.num_cols;
