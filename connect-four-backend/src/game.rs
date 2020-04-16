@@ -3,8 +3,11 @@ use chrono::{DateTime, Utc};
 use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
-// follow this for deserializng datetime - https://serde.rs/custom-date-format.html
+// Follow this for deserializng datetime - https://serde.rs/custom-date-format.html
 
+// Need to keep snake cases to be consistent with frontend expectations
+
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Game {
     #[serde(rename = "_id")]
@@ -17,6 +20,7 @@ pub struct Game {
     pub GameDate: DateTime<Utc>,
 }
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct InsertableGame {
     pub gameType: String,
@@ -27,9 +31,8 @@ pub struct InsertableGame {
     pub GameDate: DateTime<Utc>,
 }
 
-// Serialiazable game, designed to match conect_four_backend except
-// except without the date since you cannot get the current date in
-// webassembly.
+// Serialiazable game, designed to match conect_four_backend except without the date since you cannot get the current date in WebAssembly
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SerializableGame {
     pub gameType: String,

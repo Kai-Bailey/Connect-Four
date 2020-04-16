@@ -103,26 +103,32 @@ fn users() -> String {
 }
 
 // api.js
+// This section is not implemented because it is never used by the frontend
+#[allow(unused_variables)]
 #[get("/posts")]
 fn api_posts_get(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
     Err(Status::NotFound)
 }
 
+#[allow(unused_variables)]
 #[post("/posts")]
 fn api_posts_post(connection: Conn) -> Result<Json<Vec<Game>>, Status> {
     Err(Status::NotFound)
 }
 
+#[allow(unused_variables)]
 #[put("/posts/<id>")]
 fn api_posts_id_put(id: i64, connection: Conn) -> Result<Json<Vec<Game>>, Status> {
     Err(Status::NotFound)
 }
 
+#[allow(unused_variables)]
 #[get("/posts/<id>")]
 fn api_posts_id_get(id: i64, connection: Conn) -> Result<Json<Vec<Game>>, Status> {
     Err(Status::NotFound)
 }
 
+#[allow(unused_variables)]
 #[delete("/posts/<id>")]
 fn api_posts_id_delete(id: i64, connection: Conn) -> Result<Json<Vec<Game>>, Status> {
     Err(Status::NotFound)
