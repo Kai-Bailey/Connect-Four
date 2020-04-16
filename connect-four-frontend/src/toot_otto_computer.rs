@@ -528,7 +528,7 @@ impl Component for TootOttoComputerModel {
 impl TootOttoComputerModel {
     fn post_win(&mut self) {
         let json_sg = json!({
-            "gameType": "TOOT with Computer",
+            "gameType": "TOOT-OTTO with Computer",
             "Player1Name": self.player1Name,
             "Player2Name": self.player2Name,
             "WinnerName": self.game.clone().borrow_mut().winner.clone(),
