@@ -320,9 +320,23 @@ impl Component for TootOttoComputerModel {
                             && col.unwrap() >= 0 && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
-                            // TODO
+
+                            // Chip type
+                            let sel_box: SelectElement = document()
+                                .query_selector("#chip_type_dropdown")
+                                .unwrap()
+                                .unwrap()
+                                .try_into()
+                                .unwrap();
+
+                            let chip_type = match sel_box.value().unwrap().as_str() {
+                                "chip_t" => ChipType::T,
+                                "chip_o" => ChipType::O,
+                                _ => panic!(),
+                            };
+
                             let insert_result =
-                                self.game.borrow_mut().make_move(ChipType::T, col.unwrap() as usize);
+                                self.game.borrow_mut().make_move(chip_type, col.unwrap() as usize);
                             if insert_result.is_ok() {
                                 animate(
                                     col.unwrap() as i64,
@@ -415,7 +429,7 @@ impl Component for TootOttoComputerModel {
                         <small>{"Winning Combination: "} {&self.player1Name} {" - TOOT and "} {&self.player2Name} {" - OTTO"}</small>
                         <p>
                             {"Select a Disc Type: "}
-                            <select id="chip_type" style="margin: 5px">
+                            <select id="chip_type_dropdown" style="margin: 5px">
                                 <option selected=true disabled=false value="chip_t">{"T"}</option>
                                 <option selected=false disabled=false value="chip_o">{"O"}</option>
                             </select>

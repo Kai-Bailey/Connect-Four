@@ -133,21 +133,21 @@ impl Component for Model {
 
 #[derive(Debug, Switch, Clone)]
 pub enum AppRoute {
-    #[to = "/ScoreBoard"]
+    #[to = "/#/ScoreBoard"]
     ScoreBoard,
-    #[to = "/HowToConnect4"]
+    #[to = "/#/HowToConnect4"]
     HowToConnect4,
-    #[to = "/Connect4Computer"]
+    #[to = "/#/Connect4Computer"]
     Connect4Computer,
-    #[to = "/Connect4Human"]
+    #[to = "/#/Connect4Human"]
     Connect4Human,
-    #[to = "/HowToToot"]
+    #[to = "/#/HowToToot"]
     HowToToot,
-    #[to = "/TootOttoComputer"]
+    #[to = "/#/TootOttoComputer"]
     TootOttoComputer,
-    #[to = "/Score"]
+    #[to = "/#/Score"]
     Scores,
-    #[to = "/page-not-found"]
+    #[to = "/#/page-not-found"]
     PageNotFound(Permissive<String>),
     #[to = "/"]
     Welcome,
