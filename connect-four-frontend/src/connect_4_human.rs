@@ -218,6 +218,7 @@ impl Component for Connect4HumanModel {
             state: State::NonStarted,
             winner: "".to_string(),
             p_move: 0,
+            max_ai_depth: 4
         }));
         Connect4HumanModel {
             link,
@@ -265,6 +266,7 @@ impl Component for Connect4HumanModel {
                     false,
                     self.player1Name.clone(),
                     self.player2Name.clone(),
+                    4
                 ));
                 draw_board(self.game.clone());
                 self.game.borrow_mut().start_game();
