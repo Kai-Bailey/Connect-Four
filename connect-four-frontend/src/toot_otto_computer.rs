@@ -1,6 +1,4 @@
-use crate::SerializableGame;
 use connect_four_cli::toot_otto::{ChipType, DummyGrid, Game, Grid, State};
-use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
 use std::cell::RefCell;
 use std::f64::consts::PI;
@@ -10,9 +8,8 @@ use stdweb::unstable::TryInto;
 use stdweb::web::event::{ClickEvent, ResizeEvent};
 use stdweb::web::html_element::{CanvasElement, SelectElement};
 use stdweb::web::{document, window, CanvasRenderingContext2d, FillRule};
-use yew::format::{Json, Nothing};
+use yew::format::Json;
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
 pub struct TootOttoComputerModel {

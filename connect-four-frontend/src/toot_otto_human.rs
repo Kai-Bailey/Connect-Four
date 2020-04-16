@@ -1,8 +1,6 @@
-use crate::SerializableGame;
 use serde_json::json;
-use yew::format::{Json, Nothing};
+use yew::format::Json;
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
 pub struct TootOttoHumanModel {
