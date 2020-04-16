@@ -389,9 +389,9 @@ fn start_toot_and_otto() {
                         "1" => 1,
                         "2" => 2,
                         "3" => 3,
-                        _ => 4
+                        _ => 3
                     }
-                    Err(_) => 4
+                    Err(_) => 3
                 };
                 game = TootOttoGame::new(
                     num_rows,
