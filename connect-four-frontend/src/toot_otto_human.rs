@@ -157,7 +157,7 @@ fn animate(
     game: Rc<RefCell<Game>>,
     text: String,
 ) {
-    let mut cur_pos = cur_pos;
+    let cur_pos = cur_pos;
     let mut fg_color = "transparent";
     if move_val % 2 == 0 {
         fg_color = "#ff4136";
@@ -310,7 +310,7 @@ impl Component for TootOttoHumanModel {
                     }
                     State::Running => {
                         if col.is_some()
-                            && col.unwrap() >= 0
+                            /* && col.unwrap() >= 0 */
                             && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
@@ -339,7 +339,7 @@ impl Component for TootOttoHumanModel {
                                 let mut text = "";
                                 if insert_result.unwrap().2 == 1 {
                                     text = "T";
-                                } else {
+                                } else if insert_result.unwrap().2 == -1 {
                                     text = "O";
                                 }
 

@@ -34,6 +34,7 @@ macro_rules! enclose {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {}
 
+#[allow(dead_code)]
 pub enum Msg {
     gotPlayer1Name(String),
     gotPlayer2Name(String),
@@ -140,7 +141,7 @@ fn animate(
     grid: Grid,
     game: Rc<RefCell<Game>>,
 ) {
-    let mut cur_pos = cur_pos;
+    let cur_pos = cur_pos;
     let mut fg_color = "transparent";
     if move_val % 2 == 0 {
         fg_color = "#ff4136";
@@ -329,7 +330,7 @@ impl Component for Connect4ComputerModel {
                     State::Running => {
                         if col.is_some()
                             && self.game.clone().borrow().player_move_translate() == 1
-                            && col.unwrap() >= 0
+                            /* && col.unwrap() >= 0 */
                             && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();

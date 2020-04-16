@@ -34,6 +34,7 @@ macro_rules! enclose {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {}
 
+#[allow(dead_code)]
 pub enum Msg {
     gotPlayer1Name(String),
     gotPlayer2Name(String),
@@ -154,7 +155,7 @@ fn animate(
     game: Rc<RefCell<Game>>,
     text: String,
 ) {
-    let mut cur_pos = cur_pos;
+    let cur_pos = cur_pos;
     let mut fg_color = "transparent";
     if move_val % 2 == 0 {
         fg_color = "#ff4136";
@@ -215,7 +216,7 @@ fn let_ai_move(game: Rc<RefCell<Game>>) {
             let mut text = "";
             if insert_result.unwrap().3 == 1 {
                 text = "T";
-            } else {
+            } else if insert_result.unwrap().3 == -1 {
                 text = "O";
             }
 
@@ -360,7 +361,7 @@ impl Component for TootOttoComputerModel {
                     State::Running => {
                         if col.is_some()
                             && self.game.clone().borrow().player_move_translate() == 1
-                            && col.unwrap() >= 0
+                            /* && col.unwrap() >= 0 */
                             && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
@@ -389,7 +390,7 @@ impl Component for TootOttoComputerModel {
                                 let mut text = "";
                                 if insert_result.unwrap().2 == 1 {
                                     text = "T";
-                                } else {
+                                } else if insert_result.unwrap().2 == -1 {
                                     text = "O";
                                 }
 

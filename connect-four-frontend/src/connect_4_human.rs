@@ -143,7 +143,7 @@ fn animate(
     grid: Grid,
     game: Rc<RefCell<Game>>,
 ) {
-    let mut cur_pos = cur_pos;
+    let cur_pos = cur_pos;
     let mut fg_color = "transparent";
     if move_val % 2 == 0 {
         fg_color = "#ff4136";
@@ -290,7 +290,7 @@ impl Component for Connect4HumanModel {
                     }
                     State::Running => {
                         if col.is_some()
-                            && col.unwrap() >= 0
+                            /* && col.unwrap() >= 0 */
                             && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
