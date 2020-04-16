@@ -536,14 +536,3 @@ impl fmt::Display for Grid {
 pub struct Row {
     pub items: Vec<i64>,
 }
-
-impl Row {
-    fn new(size: usize) -> Row {
-        let mut row = Row { items: vec![] };
-        row.items = Vec::new();
-        for _ in 0..size {
-            row.items.push(0);
-        }
-        row
-    }
-}
