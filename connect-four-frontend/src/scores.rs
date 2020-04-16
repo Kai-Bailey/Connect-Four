@@ -1,8 +1,6 @@
 use crate::{Game, PlayerWins};
-use chrono::prelude::*;
 use yew::format::{Json, Nothing};
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
 pub struct ScoresModel {

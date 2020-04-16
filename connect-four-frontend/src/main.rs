@@ -1,4 +1,6 @@
 #![recursion_limit = "4096"]
+#![allow(non_camel_case_types)]
+#![allow(unused_variables)]
 
 #[macro_use]
 extern crate stdweb;
