@@ -73,8 +73,7 @@ impl Component for ScoreBoardModel {
         html! {
             <div class="w3-container" style="margin-top:75px">
                 <h5 class="w3-xxxlarge w3-text-red"><b>{"Game History"}</b></h5>
-                <hr style="width:50px;border:5px solid red" class="w3-round"/>
-
+                <hr style="width:50px;border:5px solid red" class="w3-round" />
                 <div id="game-stream">
                     <table>
                         <tr>
@@ -84,15 +83,15 @@ impl Component for ScoreBoardModel {
                             <th>{"Winner"}</th>
                             <th>{"When Played"}</th>
                         </tr>
-                        {match &self.games {
-                            None => html!{{"Loading..."}},
-                            Some(games) => {
-                                games.into_iter().map(|game| self.view_row(game)).collect::<Html>()
+                        {
+                            match &self.games {
+                                None => html!{{"Loading..."}},
+                                Some(games) => {
+                                    games.into_iter().map(|game| self.view_row(game)).collect::<Html>()
+                                }
                             }
-                         }
                         }
                     </table>
-
                 </div>
             </div>
         }

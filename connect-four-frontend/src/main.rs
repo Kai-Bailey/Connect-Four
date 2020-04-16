@@ -8,9 +8,9 @@ mod connect_4_computer;
 mod connect_4_human;
 mod how_to_connect_4;
 mod how_to_toot;
-mod toot_otto_computer;
 mod scoreboard;
 mod scores;
+mod toot_otto_computer;
 mod welcome;
 
 use yew::prelude::*;
@@ -18,14 +18,9 @@ use yew::prelude::*;
 use yew_router::{prelude::*, Switch};
 
 use crate::{
-    connect_4_computer::Connect4ComputerModel,
-    connect_4_human::Connect4HumanModel,
-    how_to_connect_4::HowToConnect4Model,
-    how_to_toot::HowToTootModel,
-    toot_otto_computer::TootOttoComputerModel,
-    scoreboard::ScoreBoardModel,
-    scores::ScoresModel,
-    welcome::WelcomeModel,
+    connect_4_computer::Connect4ComputerModel, connect_4_human::Connect4HumanModel,
+    how_to_connect_4::HowToConnect4Model, how_to_toot::HowToTootModel, scoreboard::ScoreBoardModel,
+    scores::ScoresModel, toot_otto_computer::TootOttoComputerModel, welcome::WelcomeModel,
 };
 use yew::virtual_dom::VNode;
 use yew_router::switch::Permissive;

@@ -61,7 +61,14 @@ fn draw_board(game: Rc<RefCell<Game>>) {
     context.begin_path();
     for y in 0..game.borrow().grid.num_rows {
         for x in 0..game.borrow().grid.num_cols {
-            context.arc((75 * x + 100) as f64, (75 * y + 50) as f64, 25.0, 0.0, 2.0 * PI, false);
+            context.arc(
+                (75 * x + 100) as f64,
+                (75 * y + 50) as f64,
+                25.0,
+                0.0,
+                2.0 * PI,
+                false,
+            );
             context.rect((75 * x + 150) as f64, (75 * y) as f64, -100.0, 100.0);
         }
     }
@@ -148,7 +155,11 @@ fn animate(
 
     if to_row * 75 >= cur_pos {
         clear_canvas();
-        draw(&grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
+        draw(
+            &grid.clone(),
+            game.borrow().grid.num_rows,
+            game.borrow().grid.num_cols,
+        );
         draw_circle(
             (75 * column + 100) as f64,
             (cur_pos + 50) as f64,
@@ -218,7 +229,7 @@ impl Component for Connect4HumanModel {
             state: State::NonStarted,
             winner: "".to_string(),
             p_move: 0,
-            max_ai_depth: 4
+            max_ai_depth: 4,
         }));
         Connect4HumanModel {
             link,
@@ -257,7 +268,7 @@ impl Component for Connect4HumanModel {
                     "8_7" => (8, 7),
                     "9_7" => (9, 7),
                     "10_7" => (10, 7),
-                    _ => (6, 7)
+                    _ => (6, 7),
                 };
 
                 self.game.replace(Game::new(
@@ -266,7 +277,7 @@ impl Component for Connect4HumanModel {
                     false,
                     self.player1Name.clone(),
                     self.player2Name.clone(),
-                    4
+                    4,
                 ));
                 draw_board(self.game.clone());
                 self.game.borrow_mut().start_game();
@@ -280,7 +291,10 @@ impl Component for Connect4HumanModel {
                         self.post_win();
                     }
                     State::Running => {
-                        if col.is_some() && col.unwrap() >= 0 && col.unwrap() < self.game.borrow().grid.num_cols {
+                        if col.is_some()
+                            && col.unwrap() >= 0
+                            && col.unwrap() < self.game.borrow().grid.num_cols
+                        {
                             let prev_grid = self.game.borrow().grid.clone();
                             let insert_result =
                                 self.game.borrow_mut().make_move(col.unwrap() as usize);
@@ -364,40 +378,41 @@ impl Component for Connect4HumanModel {
         let board_sizes = vec!["6x7", "6x10"];
 
         html! {
-        <div id="main" ng-controller="humanController">
-            <div class="w3-container" id="services" style="margin-top:75px">
-               <h5 class="w3-xxxlarge w3-text-red"><b>{title}</b></h5>
-               <hr style="width:50px;border:5px solid red" class="w3-round"/>
-            </div>
-            <div class="col-md-offset-4 col-md-8">
-               { if self.is_started() {
-                    html! {
-                    <div>
-                        <h4>{"New Game: "} {&self.player1Name} {" VS "} {&self.player2Name}</h4>
-                        <small>{"Disc Colors: "} {&self.player1Name} {" - Red    and    "} {&self.player2Name} {" - Yellow"}</small>
-                     </div>
+            <div id="main" ng-controller="humanController">
+                <div class="w3-container" id="services" style="margin-top:75px">
+                    <h5 class="w3-xxxlarge w3-text-red"><b>{title}</b></h5>
+                    <hr style="width:50px;border:5px solid red" class="w3-round"/>
+                </div>
+                <div class="col-md-offset-4 col-md-8">
+                    {
+                        if self.is_started() {
+                            html! {
+                                <div>
+                                    <h4>{"New Game: "}{&self.player1Name}{" VS "}{&self.player2Name}</h4>
+                                    <small>{"Disc Colors: "}{&self.player1Name}{" - Red and "}{&self.player2Name}{" - Yellow"}</small>
+                                </div>
+                            }
+                        } else {
+                            html!{
+                                <div class="col-md-offset-3 col-md-8">
+                                    <input id="textbox1" style="margin: 5px" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value)) />
+                                    <input id="textbox2" style="margin: 5px" type="text" placeholder="Player 2's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer2Name(e.value)) />
+                                    <select id="board_size_dropdown" style="margin: 5px">
+                                        <option selected=true disabled=false value="6_7">{"6 x 7"}</option>
+                                        <option selected=false disabled=false value="5_4">{"5 x 4"}</option>
+                                        <option selected=false disabled=false value="6_5">{"6 x 5"}</option>
+                                        <option selected=false disabled=false value="8_7">{"8 x 7"}</option>
+                                        <option selected=false disabled=false value="9_7">{"9 x 7"}</option>
+                                        <option selected=false disabled=false value="10_7">{"10 x 7"}</option>
+                                    </select>
+                                    <button style="margin: 5px" onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
+                                </div>
+                            }
+                        }
                     }
-               } else {
-                html!{
-                    <div class="col-md-offset-3 col-md-8">
-                        <input id="textbox1" style="margin: 5px" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
-                        <input id="textbox2" style="margin: 5px" type="text" placeholder="Player 2's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer2Name(e.value))/>
-                        <select id="board_size_dropdown" style="margin: 5px">
-                            <option selected=true disabled=false value="6_7">{"6 x 7"}</option>
-                            <option selected=false disabled=false value="5_4">{"5 x 4"}</option>
-                            <option selected=false disabled=false value="6_5">{"6 x 5"}</option>
-                            <option selected=false disabled=false value="8_7">{"8 x 7"}</option>
-                            <option selected=false disabled=false value="9_7">{"9 x 7"}</option>
-                            <option selected=false disabled=false value="10_7">{"10 x 7"}</option>
-                        </select>
-                        <button style="margin: 5px" onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
-                    </div>
-                  }
-                 }
-               }
-               <canvas id="gameboard" height="760" width="640"></canvas>
+                    <canvas id="gameboard" height="760" width="640"></canvas>
+                </div>
             </div>
-         </div>
         }
     }
 }

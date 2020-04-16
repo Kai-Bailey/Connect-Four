@@ -102,7 +102,7 @@ impl Component for ScoresModel {
         html! {
             <div class="w3-container" id="services" style="margin-top:75px">
                 <h5 class="w3-xxxlarge w3-text-red"><b>{"Score Board"}</b></h5>
-                <hr style="width:50px;border:5px solid red" class="w3-round"/>
+                <hr style="width:50px;border:5px solid red" class="w3-round" />
                 <div>
                     <h4>{"Games Won by Computer"}</h4>
                 </div>
@@ -112,18 +112,19 @@ impl Component for ScoresModel {
                         <th>{"Games Against Computer"}</th>
                         <th>{"Games Computer Won"}</th>
                     </tr>
-                    {match &self.games {
-                        None => html!{{"Loading..."}},
-                        Some(games) => {
-                            html!{
-                            <tr>
-                                <td>{games.len()}</td>
-                                <td>{games.into_iter().filter( |game| game.Player2Name == "Computer").count()}</td>
-                                <td>{games.into_iter().filter( |game| game.WinnerName == "Computer").count()}</td>
-                            </tr>
+                    {
+                        match &self.games {
+                            None => html!{{"Loading..."}},
+                            Some(games) => {
+                                html!{
+                                    <tr>
+                                        <td>{games.len()}</td>
+                                        <td>{games.into_iter().filter(|game| game.Player2Name == "Computer").count()}</td>
+                                        <td>{games.into_iter().filter(|game| game.WinnerName == "Computer").count()}</td>
+                                    </tr>
+                                }
                             }
                         }
-                      }
                     }
                 </table>
                 <div>
@@ -136,18 +137,18 @@ impl Component for ScoresModel {
                         <th>{"Played Against"}</th>
                         <th>{"When Played"}</th>
                     </tr>
-                    {match &self.games {
-                        None => html!{{"Loading..."}},
-                        Some(games) => {
-                            games.into_iter().filter_map(|game|
-                                if(game.WinnerName == "Computer"){
-                                    return Some(self.view_row_computer_won(game));
-                                } else {
-                                    return None;
-                                }
-                        ).collect::<Html>()
+                    {
+                        match &self.games {
+                            None => html!{{"Loading..."}},
+                            Some(games) => {
+                                games.into_iter().filter_map(|game|
+                                    if(game.WinnerName == "Computer"){
+                                        return Some(self.view_row_computer_won(game));
+                                    } else {
+                                        return None;
+                                    }).collect::<Html>()
+                            }
                         }
-                     }
                     }
                 </table>
                 <div>
@@ -159,12 +160,13 @@ impl Component for ScoresModel {
                             <th>{"Player Name"}</th>
                             <th>{"No. of Wins"}</th>
                         </tr>
-                        {match &self.gamesWonPerPlayer {
-                            None => html!{{"Loading..."}},
-                            Some(gamesWon) => {
-                                gamesWon.into_iter().map(|player| self.view_row_player_wins(player)).collect::<Html>()
+                        {
+                            match &self.gamesWonPerPlayer {
+                                None => html!{{"Loading..."}},
+                                Some(gamesWon) => {
+                                    gamesWon.into_iter().map(|player| self.view_row_player_wins(player)).collect::<Html>()
+                                }
                             }
-                         }
                         }
                     </table>
                 </div>

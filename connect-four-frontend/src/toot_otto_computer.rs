@@ -1,5 +1,5 @@
 use crate::SerializableGame;
-use connect_four_cli::toot_otto::{Game, Grid, DummyGrid, State, ChipType};
+use connect_four_cli::toot_otto::{ChipType, DummyGrid, Game, Grid, State};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::json;
 use std::cell::RefCell;
@@ -59,7 +59,14 @@ fn draw_board(game: Rc<RefCell<Game>>) {
     context.begin_path();
     for y in 0..game.borrow().grid.num_rows {
         for x in 0..game.borrow().grid.num_cols {
-            context.arc((75 * x + 100) as f64, (75 * y + 50) as f64, 25.0, 0.0, 2.0 * PI, false);
+            context.arc(
+                (75 * x + 100) as f64,
+                (75 * y + 50) as f64,
+                25.0,
+                0.0,
+                2.0 * PI,
+                false,
+            );
             context.rect((75 * x + 150) as f64, (75 * y) as f64, -100.0, 100.0);
         }
     }
@@ -160,7 +167,12 @@ fn animate(
 
     if to_row * 75 >= cur_pos {
         clear_canvas();
-        draw(&grid.clone(), &dummy_grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
+        draw(
+            &grid.clone(),
+            &dummy_grid.clone(),
+            game.borrow().grid.num_rows,
+            game.borrow().grid.num_cols,
+        );
         draw_circle(
             (75 * column + 100) as f64,
             (cur_pos + 50) as f64,
@@ -184,7 +196,12 @@ fn animate(
             )
         });
     } else {
-        draw(&grid.clone(), &dummy_grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
+        draw(
+            &grid.clone(),
+            &dummy_grid.clone(),
+            game.borrow().grid.num_rows,
+            game.borrow().grid.num_cols,
+        );
         check_for_win(game.clone());
         let_ai_move(game.clone());
     }
@@ -268,7 +285,7 @@ impl Component for TootOttoComputerModel {
             state: State::NonStarted,
             winner: "".to_string(),
             p_move: 0,
-            max_ai_depth: 4
+            max_ai_depth: 4,
         }));
         TootOttoComputerModel {
             link,
@@ -307,7 +324,7 @@ impl Component for TootOttoComputerModel {
                     "8_7" => (8, 7),
                     "9_7" => (9, 7),
                     "10_7" => (10, 7),
-                    _ => (6, 7)
+                    _ => (6, 7),
                 };
 
                 let difficulty_box: SelectElement = document()
@@ -321,7 +338,7 @@ impl Component for TootOttoComputerModel {
                     "easy" => 1,
                     "medium" => 2,
                     "hard" => 4,
-                    _ => 4
+                    _ => 4,
                 };
 
                 self.game.replace(Game::new(
@@ -330,7 +347,7 @@ impl Component for TootOttoComputerModel {
                     false,
                     self.player1Name.clone(),
                     self.player2Name.clone(),
-                    max_depth
+                    max_depth,
                 ));
                 draw_board(self.game.clone());
                 self.game.borrow_mut().start_game();
@@ -344,8 +361,10 @@ impl Component for TootOttoComputerModel {
                         self.post_win();
                     }
                     State::Running => {
-                        if col.is_some() && self.game.clone().borrow().player_move_translate() == 1
-                            && col.unwrap() >= 0 && col.unwrap() < self.game.borrow().grid.num_cols
+                        if col.is_some()
+                            && self.game.clone().borrow().player_move_translate() == 1
+                            && col.unwrap() >= 0
+                            && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
                             let prev_dummy_grid = self.game.borrow().dummy_grid.clone();
@@ -364,8 +383,10 @@ impl Component for TootOttoComputerModel {
                                 _ => panic!(),
                             };
 
-                            let insert_result =
-                                self.game.borrow_mut().make_move(chip_type, col.unwrap() as usize);
+                            let insert_result = self
+                                .game
+                                .borrow_mut()
+                                .make_move(chip_type, col.unwrap() as usize);
 
                             let mut text = "";
                             if insert_result.unwrap().2 == 1 {
@@ -478,7 +499,7 @@ impl Component for TootOttoComputerModel {
                } else {
                 html!{
                     <div class="col-md-offset-3 col-md-8">
-                        <input id="textbox1" style="margin: 5px" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
+                        <input id="textbox1" style="margin: 5px" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value)) />
                         <select id="board_size_dropdown" style="margin: 5px">
                             <option selected=true disabled=false value="6_7">{"6 x 7"}</option>
                             <option selected=false disabled=false value="5_4">{"5 x 4"}</option>
