@@ -1,4 +1,4 @@
-#![recursion_limit = "1024"]
+#![recursion_limit = "4096"]
 
 #[macro_use]
 extern crate stdweb;
@@ -8,6 +8,7 @@ mod connect_4_computer;
 mod connect_4_human;
 mod how_to_connect_4;
 mod how_to_toot;
+mod toot_otto_computer;
 mod scoreboard;
 mod scores;
 mod welcome;
@@ -17,9 +18,14 @@ use yew::prelude::*;
 use yew_router::{prelude::*, Switch};
 
 use crate::{
-    connect_4_computer::Connect4ComputerModel, connect_4_human::Connect4HumanModel,
-    how_to_connect_4::HowToConnect4Model, how_to_toot::HowToTootModel, scoreboard::ScoreBoardModel,
-    scores::ScoresModel, welcome::WelcomeModel,
+    connect_4_computer::Connect4ComputerModel,
+    connect_4_human::Connect4HumanModel,
+    how_to_connect_4::HowToConnect4Model,
+    how_to_toot::HowToTootModel,
+    toot_otto_computer::TootOttoComputerModel,
+    scoreboard::ScoreBoardModel,
+    scores::ScoresModel,
+    welcome::WelcomeModel,
 };
 use yew::virtual_dom::VNode;
 use yew_router::switch::Permissive;
@@ -94,6 +100,7 @@ impl Component for Model {
                     <RouterAnchor<AppRoute> route=AppRoute::Connect4Human> {"Play Connect4 With Another Human"} </RouterAnchor<AppRoute>>
                     <br />
                     <RouterAnchor<AppRoute> route=AppRoute::HowToToot> {"How to Play TOOT-OTTO"} </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> route=AppRoute::TootOttoComputer> {"Play TOOT-OTTO With Computer"} </RouterAnchor<AppRoute>>
                     <br />
                     <RouterAnchor<AppRoute> route=AppRoute::ScoreBoard> {"View Game History"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::Scores> {"Scores"} </RouterAnchor<AppRoute>>
@@ -107,6 +114,7 @@ impl Component for Model {
                                 AppRoute::Connect4Computer => html!{<Connect4ComputerModel />},
                                 AppRoute::Connect4Human => html!{<Connect4HumanModel />},
                                 AppRoute::HowToToot => html!{<HowToTootModel />},
+                                AppRoute::TootOttoComputer => html!{<TootOttoComputerModel />},
                                 AppRoute::ScoreBoard => html!{<ScoreBoardModel />},
                                 AppRoute::Scores => html!{<ScoresModel />},
                                 AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
@@ -135,6 +143,8 @@ pub enum AppRoute {
     Connect4Human,
     #[to = "/HowToToot"]
     HowToToot,
+    #[to = "/TootOttoComputer"]
+    TootOttoComputer,
     #[to = "/Score"]
     Scores,
     #[to = "/page-not-found"]
