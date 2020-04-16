@@ -19,7 +19,7 @@ Install and start MongoDB: https://www.mongodb.com/download-center/community
 
 ## Start the backend
 
-Go to the `connect-four-backedn` directory, then run:
+Go to the `connect-four-backend` directory, then run:
 
 ```bash
 cargo run
@@ -28,6 +28,14 @@ cargo run
 ## See the result
 
 Open the game at http://localhost:8000/
+
+## Run the CLI
+
+Go to the `connect-four-cli` directory, then run:
+
+```bash
+cargo run
+```
 
 # Design Document
 
