@@ -156,7 +156,7 @@ impl Game {
     }
 
     #[allow(dead_code)] // Used by web
-    pub fn make_move(&mut self, chip_type: ChipType, col_num: usize) -> Result<(usize, usize), ()> {
+    pub fn make_move(&mut self, chip_type: ChipType, col_num: usize) -> Result<(usize, usize, i32), ()> {
         let grid_val = self.player_move_translate();
 
         let insert_result = self.grid.insert_chip(col_num, grid_val);
@@ -182,7 +182,7 @@ impl Game {
             self.post_game();
         }
 
-        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize));
+        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, chip_value));
     }
 
     fn check_win(&self) -> Option<i64> {
@@ -287,7 +287,7 @@ impl Game {
     }
 
     #[allow(dead_code)] // Used by web
-    pub fn ai_make_move(&mut self) -> Result<(usize, usize, usize), ()> {
+    pub fn ai_make_move(&mut self) -> Result<(usize, usize, usize, i32), ()> {
         let (chip_type, mut col_num) = self.ai_move_val();
         let grid_val = self.player_move_translate();
 
@@ -318,7 +318,7 @@ impl Game {
             self.post_game();
         }
 
-        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num));
+        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num, chip_value));
     }
 
     fn ai_move_val(&self) -> (ChipType, usize) {
