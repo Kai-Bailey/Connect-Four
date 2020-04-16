@@ -48,7 +48,7 @@ pub enum Msg {
 
 fn draw_board(game: Rc<RefCell<Game>>) {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_c4_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -96,7 +96,7 @@ fn draw(grid: &Grid, num_rows: usize, num_cols: usize) {
 
 fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_c4_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -114,7 +114,7 @@ fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String) {
 
 fn print_win(winner: String) {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_c4_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -222,7 +222,7 @@ fn check_for_win(game: Rc<RefCell<Game>>) {
 
 fn clear_canvas() {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_c4_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -371,7 +371,7 @@ impl Component for Connect4ComputerModel {
 
     fn mounted(&mut self) -> ShouldRender {
         let canvas: CanvasElement = document()
-            .query_selector("#gameboard")
+            .query_selector("#gameboard_c4_ai")
             .unwrap()
             .unwrap()
             .try_into()
@@ -453,7 +453,7 @@ impl Component for Connect4ComputerModel {
                             }
                         }
                     }
-                    <canvas id="gameboard" height="760" width="640"></canvas>
+                    <canvas id="gameboard_c4_ai" height="760" width="640"></canvas>
                 </div>
             </div>
         }

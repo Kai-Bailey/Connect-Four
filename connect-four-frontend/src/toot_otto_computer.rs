@@ -48,7 +48,7 @@ pub enum Msg {
 
 fn draw_board(game: Rc<RefCell<Game>>) {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_toot_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -106,7 +106,7 @@ fn draw(grid: &Grid, dummy_grid: &DummyGrid, num_rows: usize, num_cols: usize) {
 
 fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String, text: String) {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_toot_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -126,7 +126,7 @@ fn draw_circle(x: f64, y: f64, r: f64, fill: String, stroke: String, text: Strin
 
 fn print_win(winner: String) {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_toot_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -252,7 +252,7 @@ fn check_for_win(game: Rc<RefCell<Game>>) {
 
 fn clear_canvas() {
     let canvas: CanvasElement = document()
-        .query_selector("#gameboard")
+        .query_selector("#gameboard_toot_ai")
         .unwrap()
         .unwrap()
         .try_into()
@@ -430,7 +430,7 @@ impl Component for TootOttoComputerModel {
 
     fn mounted(&mut self) -> ShouldRender {
         let canvas: CanvasElement = document()
-            .query_selector("#gameboard")
+            .query_selector("#gameboard_toot_ai")
             .unwrap()
             .unwrap()
             .try_into()
@@ -518,7 +518,7 @@ impl Component for TootOttoComputerModel {
                   }
                  }
                }
-               <canvas id="gameboard" height="760" width="640"></canvas>
+               <canvas id="gameboard_toot_ai" height="760" width="640"></canvas>
             </div>
          </div>
         }
