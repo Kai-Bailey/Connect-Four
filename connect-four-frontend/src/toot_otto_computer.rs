@@ -448,9 +448,9 @@ impl Component for TootOttoComputerModel {
         let game_clone = self.game.clone();
         let link = self.link.clone();
 
+        #[allow(unused_variables)]
         canvas.add_event_listener(enclose!((context) move |event: ClickEvent| {
             let x_click = event.client_x() - rect.get_left() as i32;
-            let y_click = event.client_y() - rect.get_top() as i32;
             let num_cols = game_clone.clone().borrow().grid.num_cols;
             for col in 0..num_cols {
                 let x_col = 75 * col as i32 + 100;
