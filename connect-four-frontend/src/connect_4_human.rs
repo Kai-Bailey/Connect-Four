@@ -25,7 +25,7 @@ use connect_four_cli::connect_four::{Game, Grid, State};
 use std::cell::RefCell;
 use std::f64::consts::PI;
 use std::rc::Rc;
-use stdweb::web::html_element::CanvasElement;
+use stdweb::web::html_element::{CanvasElement, SelectElement};
 
 macro_rules! enclose {
     ( ($( $x:ident ),*) $y:expr ) => {
@@ -48,30 +48,30 @@ pub enum Msg {
     PostGameFailed,
 }
 
-fn draw_board() {
-    js! {// draw the mask
-        // http://stackoverflow.com/questions/6271419/how-to-fill-the-opposite-shape-on-canvas
-        // -->  http://stackoverflow.com/a/11770000/917957
-        var canvas = document.getElementsByTagName("canvas")[0];
-        var context = canvas.getContext("2d");
-        context.save();
-        context.fillStyle = "#00bfff";
-        context.beginPath();
-        var x, y;
-        for (y = 0; y < 6; y++) {
-            for (x = 0; x < 7; x++) {
-                context.arc(75 * x + 100, 75 * y + 50, 25, 0, 2 * Math.PI);
-                context.rect(75 * x + 150, 75 * y, -100, 100);
-            }
+fn draw_board(game: Rc<RefCell<Game>>) {
+    let canvas: CanvasElement = document()
+        .query_selector("#gameboard")
+        .unwrap()
+        .unwrap()
+        .try_into()
+        .unwrap();
+    let context: CanvasRenderingContext2d = canvas.get_context().unwrap();
+    context.save();
+    context.set_fill_style_color("#00bfff");
+    context.begin_path();
+    for y in 0..game.borrow().grid.num_rows {
+        for x in 0..game.borrow().grid.num_cols {
+            context.arc((75 * x + 100) as f64, (75 * y + 50) as f64, 25.0, 0.0, 2.0 * PI, false);
+            context.rect((75 * x + 150) as f64, (75 * y) as f64, -100.0, 100.0);
         }
-        context.fill();
-        context.restore();
     }
+    context.fill(FillRule::NonZero);
+    context.restore();
 }
 
-fn draw(grid: &Grid) {
-    for y in 0..6 {
-        for x in 0..7 {
+fn draw(grid: &Grid, num_rows: usize, num_cols: usize) {
+    for y in 0..num_rows {
+        for x in 0..num_cols {
             let mut fg_color = "transparent";
             if grid.get(y, x) >= 1 {
                 fg_color = "#ff4136";
@@ -148,7 +148,7 @@ fn animate(
 
     if to_row * 75 >= cur_pos {
         clear_canvas();
-        draw(&grid.clone());
+        draw(&grid.clone(), game.borrow().grid.num_rows, game.borrow().grid.num_cols);
         draw_circle(
             (75 * column + 100) as f64,
             (cur_pos + 50) as f64,
@@ -156,7 +156,7 @@ fn animate(
             fg_color.to_string(),
             "black".to_string(),
         );
-        draw_board();
+        draw_board(game.clone());
         window().request_animation_frame(move |_| {
             animate(
                 column,
@@ -240,14 +240,33 @@ impl Component for Connect4HumanModel {
             }
             Msg::startGame => {
                 self.gameStarted = true;
+
+                // board size
+                let sel_box: SelectElement = document()
+                    .query_selector("#board_size_dropdown")
+                    .unwrap()
+                    .unwrap()
+                    .try_into()
+                    .unwrap();
+
+                let boardSize = match sel_box.value().unwrap().as_str() {
+                    "6_7" => (6, 7),
+                    "5_4" => (5, 4),
+                    "6_5" => (6, 5),
+                    "8_7" => (8, 7),
+                    "9_7" => (9, 7),
+                    "10_7" => (10, 7),
+                    _ => (6, 7)
+                };
+
                 self.game.replace(Game::new(
-                    6,
-                    7,
+                    boardSize.0,
+                    boardSize.1,
                     false,
                     self.player1Name.clone(),
                     self.player2Name.clone(),
                 ));
-                draw_board();
+                draw_board(self.game.clone());
                 self.game.borrow_mut().start_game();
             }
             Msg::clicked(col) => {
@@ -259,7 +278,7 @@ impl Component for Connect4HumanModel {
                         self.post_win();
                     }
                     State::Running => {
-                        if col.is_some() {
+                        if col.is_some() && col.unwrap() >= 0 && col.unwrap() < self.game.borrow().grid.num_cols {
                             let prev_grid = self.game.borrow().grid.clone();
                             let insert_result =
                                 self.game.borrow_mut().make_move(col.unwrap() as usize);
@@ -318,8 +337,9 @@ impl Component for Connect4HumanModel {
         canvas.add_event_listener(enclose!( (context) move |event: ClickEvent| {
             let x_click = event.client_x() - rect.get_left() as i32;
             let y_click = event.client_y() - rect.get_top() as i32;
-            for col in 0..7 {
-                let x_col = 75 * col + 100;
+            let num_cols = game_clone.clone().borrow().grid.num_cols;
+            for col in 0..num_cols {
+                let x_col = 75 * col as i32 + 100;
                 if (x_click - x_col) * (x_click - x_col) <= 25 * 25 {
                     link.send_message(Msg::clicked(Some(col as usize)));
                     return;
@@ -339,6 +359,8 @@ impl Component for Connect4HumanModel {
             title = "Enter Player Names";
         }
 
+        let board_sizes = vec!["6x7", "6x10"];
+
         html! {
         <div id="main" ng-controller="humanController">
             <div class="w3-container" id="services" style="margin-top:75px">
@@ -356,14 +378,22 @@ impl Component for Connect4HumanModel {
                } else {
                 html!{
                     <div class="col-md-offset-3 col-md-8">
-                        <input id="textbox1" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
-                        <input id="textbox2" type="text" placeholder="Player 2's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer2Name(e.value))/>
-                        <button onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
+                        <input id="textbox1" style="margin: 5px" type="text" placeholder="Player 1's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer1Name(e.value))/>
+                        <input id="textbox2" style="margin: 5px" type="text" placeholder="Player 2's Name" oninput=self.link.callback(|e: InputData| Msg::gotPlayer2Name(e.value))/>
+                        <select id="board_size_dropdown" style="margin: 5px">
+                            <option selected=true disabled=false value="6_7">{"6 x 7"}</option>
+                            <option selected=false disabled=false value="5_4">{"5 x 4"}</option>
+                            <option selected=false disabled=false value="6_5">{"6 x 5"}</option>
+                            <option selected=false disabled=false value="8_7">{"8 x 7"}</option>
+                            <option selected=false disabled=false value="9_7">{"9 x 7"}</option>
+                            <option selected=false disabled=false value="10_7">{"10 x 7"}</option>
+                        </select>
+                        <button style="margin: 5px" onclick=self.link.callback(|_| Msg::startGame)>{ "Start Game" }</button>
                     </div>
                   }
                  }
                }
-               <canvas id="gameboard" height="480" width="640"></canvas>
+               <canvas id="gameboard" height="760" width="640"></canvas>
             </div>
          </div>
         }
