@@ -412,8 +412,15 @@ impl Component for TootOttoComputerModel {
                     html! {
                     <div>
                         <h4>{"New Game: "} {&self.player1Name} {" VS "} {&self.player2Name}</h4>
-                        <small>{"Disc Colors: "} {&self.player1Name} {" - Red    and    "} {&self.player2Name} {" - Yellow"}</small>
-                     </div>
+                        <small>{"Winning Combination: "} {&self.player1Name} {" - TOOT and "} {&self.player2Name} {" - OTTO"}</small>
+                        <p>
+                            {"Select a Disc Type: "}
+                            <select id="chip_type" style="margin: 5px">
+                                <option selected=true disabled=false value="chip_t">{"T"}</option>
+                                <option selected=false disabled=false value="chip_o">{"O"}</option>
+                            </select>
+                        </p>
+                    </div>
                     }
                } else {
                 html!{
