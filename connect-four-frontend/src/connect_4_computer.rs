@@ -445,7 +445,7 @@ impl Component for Connect4ComputerModel {
 impl Connect4ComputerModel {
     fn post_win(&mut self) {
         let json_sg = json!({
-            "gameType": "Computer",
+            "gameType": "Connect4 with Computer",
             "Player1Name": self.player1Name,
             "Player2Name": self.player2Name,
             "WinnerName": self.game.clone().borrow_mut().winner.clone(),

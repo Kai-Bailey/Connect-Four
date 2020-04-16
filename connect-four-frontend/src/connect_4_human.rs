@@ -405,7 +405,7 @@ impl Component for Connect4HumanModel {
 impl Connect4HumanModel {
     fn post_win(&mut self) {
         let json_sg = json!({
-            "gameType": "Human",
+            "gameType": "Connect4 with Human",
             "Player1Name": self.player1Name,
             "Player2Name": self.player2Name,
             "WinnerName": self.game.clone().borrow_mut().winner.clone(),

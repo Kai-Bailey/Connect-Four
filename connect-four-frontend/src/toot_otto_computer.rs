@@ -148,6 +148,7 @@ fn animate(
     grid: Grid,
     dummy_grid: DummyGrid,
     game: Rc<RefCell<Game>>,
+    text: String,
 ) {
     let mut cur_pos = cur_pos;
     let mut fg_color = "transparent";
@@ -166,9 +167,10 @@ fn animate(
             25.0,
             fg_color.to_string(),
             "black".to_string(),
-            "".to_string(), // TODO
+            text.clone(),
         );
         draw_board(game.clone());
+        let my_text = text.clone();
         window().request_animation_frame(move |_| {
             animate(
                 column,
@@ -178,6 +180,7 @@ fn animate(
                 grid.clone(),
                 dummy_grid.clone(),
                 game,
+                my_text,
             )
         });
     } else {
@@ -195,6 +198,13 @@ fn let_ai_move(game: Rc<RefCell<Game>>) {
         let prev_dummy_grid = game.clone().borrow().dummy_grid.clone();
         let insert_result = game.borrow_mut().ai_make_move();
         if insert_result.is_ok() {
+            let mut text = "";
+            if insert_result.unwrap().3 == 1 {
+                text = "T";
+            } else {
+                text = "O";
+            }
+
             animate(
                 insert_result.unwrap().2 as i64,
                 insert_result.unwrap().1 as i64,
@@ -203,6 +213,7 @@ fn let_ai_move(game: Rc<RefCell<Game>>) {
                 prev_grid,
                 prev_dummy_grid,
                 game.clone(),
+                text.to_string(),
             );
         }
     } else if game.borrow().state == State::Busy {
@@ -355,6 +366,14 @@ impl Component for TootOttoComputerModel {
 
                             let insert_result =
                                 self.game.borrow_mut().make_move(chip_type, col.unwrap() as usize);
+
+                            let mut text = "";
+                            if insert_result.unwrap().2 == 1 {
+                                text = "T";
+                            } else {
+                                text = "O";
+                            }
+
                             if insert_result.is_ok() {
                                 animate(
                                     col.unwrap() as i64,
@@ -364,6 +383,7 @@ impl Component for TootOttoComputerModel {
                                     prev_grid,
                                     prev_dummy_grid,
                                     self.game.clone(),
+                                    text.to_string(),
                                 );
                             }
                             check_for_win(self.game.clone());
@@ -487,7 +507,7 @@ impl Component for TootOttoComputerModel {
 impl TootOttoComputerModel {
     fn post_win(&mut self) {
         let json_sg = json!({
-            "gameType": "Computer",
+            "gameType": "TOOT with Computer",
             "Player1Name": self.player1Name,
             "Player2Name": self.player2Name,
             "WinnerName": self.game.clone().borrow_mut().winner.clone(),
