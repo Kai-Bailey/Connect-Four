@@ -1,8 +1,6 @@
-use crate::SerializableGame;
 use serde_json::json;
-use yew::format::{Json, Nothing};
+use yew::format::Json;
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-use yew::services::Task;
 use yew::{prelude::*, virtual_dom::VNode, Properties};
 
 pub struct TootOttoHumanModel {
@@ -159,7 +157,7 @@ fn animate(
     game: Rc<RefCell<Game>>,
     text: String,
 ) {
-    let mut cur_pos = cur_pos;
+    let cur_pos = cur_pos;
     let mut fg_color = "transparent";
     if move_val % 2 == 0 {
         fg_color = "#ff4136";
@@ -312,7 +310,7 @@ impl Component for TootOttoHumanModel {
                     }
                     State::Running => {
                         if col.is_some()
-                            && col.unwrap() >= 0
+                            /* && col.unwrap() >= 0 */
                             && col.unwrap() < self.game.borrow().grid.num_cols
                         {
                             let prev_grid = self.game.borrow().grid.clone();
@@ -341,7 +339,7 @@ impl Component for TootOttoHumanModel {
                                 let mut text = "";
                                 if insert_result.unwrap().2 == 1 {
                                     text = "T";
-                                } else {
+                                } else if insert_result.unwrap().2 == -1 {
                                     text = "O";
                                 }
 
@@ -398,9 +396,9 @@ impl Component for TootOttoHumanModel {
         let game_clone = self.game.clone();
         let link = self.link.clone();
 
+        #[allow(unused_variables)]
         canvas.add_event_listener(enclose!((context) move |event: ClickEvent| {
             let x_click = event.client_x() - rect.get_left() as i32;
-            let y_click = event.client_y() - rect.get_top() as i32;
             let num_cols = game_clone.clone().borrow().grid.num_cols;
             for col in 0..num_cols {
                 let x_col = 75 * col as i32 + 100;
@@ -422,8 +420,6 @@ impl Component for TootOttoHumanModel {
         } else {
             title = "Enter Player Names";
         }
-
-        let board_sizes = vec!["6x7", "6x10"];
 
         html! {
             <div id="main" ng-controller="humanController">
