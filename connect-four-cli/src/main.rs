@@ -257,7 +257,7 @@ fn start_connect_four() {
                     false,
                     "P1".to_string(),
                     "P2".to_string(),
-                    4
+                    4,
                 );
             }
             "2" => {
@@ -272,9 +272,9 @@ fn start_connect_four() {
                         "1" => 1,
                         "2" => 2,
                         "3" => 4,
-                        _ => 4
-                    }
-                    Err(_) => 4
+                        _ => 4,
+                    },
+                    Err(_) => 4,
                 };
 
                 game = ConnectFourGame::new(
@@ -283,7 +283,7 @@ fn start_connect_four() {
                     true,
                     "Player".to_string(),
                     "Computer".to_string(),
-                    max_ai_depth
+                    max_ai_depth,
                 );
             }
             _ => {
@@ -373,7 +373,7 @@ fn start_toot_and_otto() {
                     false,
                     "P1".to_string(),
                     "P2".to_string(),
-                    3
+                    3,
                 );
             }
             "2" => {
@@ -389,9 +389,9 @@ fn start_toot_and_otto() {
                         "1" => 1,
                         "2" => 2,
                         "3" => 3,
-                        _ => 3
-                    }
-                    Err(_) => 3
+                        _ => 3,
+                    },
+                    Err(_) => 3,
                 };
                 game = TootOttoGame::new(
                     num_rows,
@@ -399,7 +399,7 @@ fn start_toot_and_otto() {
                     true,
                     "Player".to_string(),
                     "Computer".to_string(),
-                    max_ai_depth
+                    max_ai_depth,
                 );
             }
             _ => {

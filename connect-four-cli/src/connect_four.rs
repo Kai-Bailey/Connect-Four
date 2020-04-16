@@ -55,7 +55,7 @@ impl Game {
             state: State::Running,
             winner: "".to_string(),
             p_move: 0,
-            max_ai_depth: max_depth
+            max_ai_depth: max_depth,
         };
         if with_ai {
             game.p2 = "Computer".to_string();

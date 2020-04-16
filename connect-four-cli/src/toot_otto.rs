@@ -51,7 +51,7 @@ impl Game {
         with_ai: bool,
         p1_name: String,
         p2_name: String,
-        max_depth: u32
+        max_depth: u32,
     ) -> Game {
         let grid = Grid::new(row_size, col_size);
         let dummy_grid = DummyGrid::new(row_size, col_size);
@@ -64,7 +64,7 @@ impl Game {
             state: State::Running,
             winner: "".to_string(),
             p_move: 0,
-            max_ai_depth: max_depth
+            max_ai_depth: max_depth,
         };
         if with_ai {
             game.p2 = "Computer".to_string();
@@ -156,7 +156,11 @@ impl Game {
     }
 
     #[allow(dead_code)] // Used by web
-    pub fn make_move(&mut self, chip_type: ChipType, col_num: usize) -> Result<(usize, usize, i32), ()> {
+    pub fn make_move(
+        &mut self,
+        chip_type: ChipType,
+        col_num: usize,
+    ) -> Result<(usize, usize, i32), ()> {
         let grid_val = self.player_move_translate();
 
         let insert_result = self.grid.insert_chip(col_num, grid_val);
@@ -182,7 +186,11 @@ impl Game {
             self.post_game();
         }
 
-        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, chip_value));
+        return Ok((
+            insert_result.unwrap(),
+            (self.p_move - 1) as usize,
+            chip_value,
+        ));
     }
 
     fn check_win(&self) -> Option<i64> {
@@ -318,7 +326,12 @@ impl Game {
             self.post_game();
         }
 
-        return Ok((insert_result.unwrap(), (self.p_move - 1) as usize, col_num, chip_value));
+        return Ok((
+            insert_result.unwrap(),
+            (self.p_move - 1) as usize,
+            col_num,
+            chip_value,
+        ));
     }
 
     fn ai_move_val(&self) -> (ChipType, usize) {
