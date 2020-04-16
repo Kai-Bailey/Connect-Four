@@ -6,11 +6,10 @@
 
 use r2d2::PooledConnection;
 use r2d2_mongodb::{ConnectionOptions, MongodbConnectionManager};
-use std::ops::Deref;
-use rocket::{Request, State, Outcome};
-use rocket::request::{self, FromRequest};
 use rocket::http::Status;
-
+use rocket::request::{self, FromRequest};
+use rocket::{Outcome, Request, State};
+use std::ops::Deref;
 
 type Pool = r2d2::Pool<MongodbConnectionManager>;
 pub struct Conn(pub PooledConnection<MongodbConnectionManager>);
