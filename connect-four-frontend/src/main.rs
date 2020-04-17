@@ -100,7 +100,7 @@ impl Component for Model {
                     <br />
                     <RouterAnchor<AppRoute> route=AppRoute::HowToToot> {"How to Play TOOT-OTTO"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::TootOttoComputer> {"Play TOOT-OTTO With Computer"} </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> route=AppRoute::TootOttoHuman> {"Play TOOT_OTTO With Another Human"} </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> route=AppRoute::TootOttoHuman> {"Play TOOT-OTTO With Another Human"} </RouterAnchor<AppRoute>>
                     <br />
                     <RouterAnchor<AppRoute> route=AppRoute::ScoreBoard> {"View Game History"} </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> route=AppRoute::Scores> {"Scores"} </RouterAnchor<AppRoute>>
