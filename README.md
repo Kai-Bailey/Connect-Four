@@ -1,9 +1,16 @@
 # Connect-Four
+
 A recreation of the popular game of Connect-Four featuring an AI player with multiple difficulties. This web app was built purely using Rust and WebAssembly. We used [Rocket](https://rocket.rs/) as the backend framework, [Yew](https://yew.rs/docs/) as the frontend framework and [Cargo-Web](https://github.com/koute/cargo-web) as the build tool. Check out this [sweet video](https://www.youtube.com/watch?v=4nV84WVmwwU) for more details!
 
 # Get Started
 
-## Build the frontend
+### Install build dependencies
+
+```bash
+sudo apt install -y build-essential pkg-config libssl-dev
+```
+
+### Build the frontend
 
 ```bash
 cargo install -f cargo-web
@@ -16,11 +23,11 @@ Go to the `connect-four-frontend` directory, then run:
 bash build.sh
 ```
 
-## Install the database
+### Install the database
 
 Install and start MongoDB: https://www.mongodb.com/download-center/community
 
-## Start the backend
+### Start the backend
 
 Go to the `connect-four-backend` directory, then run:
 
@@ -28,11 +35,11 @@ Go to the `connect-four-backend` directory, then run:
 cargo run
 ```
 
-## See the result
+### See the result
 
 Open the game at http://localhost:8000/
 
-## Run the CLI
+### Run the CLI
 
 Go to the `connect-four-cli` directory, then run:
 
