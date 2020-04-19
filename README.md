@@ -1,4 +1,5 @@
-A recreation of the popular game of Connect-4 featuring an AI player with multiple difficulties. This web app was built purely using Rust and WebAssembly. We used [Rocket](https://rocket.rs/) as the backend framework, [Yew](https://yew.rs/docs/) as the frontend framework and [Cargo-Web](https://github.com/koute/cargo-web) as the build tool. Check out this [sweet video](https://www.youtube.com/watch?v=4nV84WVmwwU) for more details!
+# Connect-Four
+A recreation of the popular game of Connect-Four featuring an AI player with multiple difficulties. This web app was built purely using Rust and WebAssembly. We used [Rocket](https://rocket.rs/) as the backend framework, [Yew](https://yew.rs/docs/) as the frontend framework and [Cargo-Web](https://github.com/koute/cargo-web) as the build tool. Check out this [sweet video](https://www.youtube.com/watch?v=4nV84WVmwwU) for more details!
 
 # Get Started
 
